@@ -1,3 +1,4 @@
+export Biss_SecA_ls
 function Biss_SecA_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,

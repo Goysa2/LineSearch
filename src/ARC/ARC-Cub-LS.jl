@@ -1,3 +1,4 @@
+export ARC_Cub_ls
 function ARC_Cub_ls(h :: AbstractLineFunction,
                   h₀ :: Float64,
                   g₀ :: Float64,

@@ -1,3 +1,4 @@
+export ARC_SecA_ls
 function ARC_SecA_ls(h :: AbstractLineFunction,
                   h₀ :: Float64,
                   g₀ :: Float64,

@@ -1,3 +1,4 @@
+export Biss_Cub_ls
 function Biss_Cub_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,

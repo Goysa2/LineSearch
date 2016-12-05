@@ -1,3 +1,4 @@
+export TR_Sec_ls
 function TR_Sec_ls(h :: AbstractLineFunction,
                   h₀ :: Float64,
                   g₀ :: Float64,
@@ -5,7 +6,7 @@ function TR_Sec_ls(h :: AbstractLineFunction,
                   τ₀ :: Float64=1.0e-4,
                   τ₁ :: Float64=0.9999,
                   maxiter :: Int=10,
-                  verbose :: Bool=true)
+                  verbose :: Bool=false)
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)

@@ -1,3 +1,4 @@
+export trouve_intervalle_ls
 function trouve_intervalle_ls(h :: AbstractLineFunction,
                               h₀ :: Float64,
                               g₀ :: Float64,

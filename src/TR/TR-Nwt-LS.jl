@@ -1,3 +1,4 @@
+export TR_Nwt_ls
 function TR_Nwt_ls(h :: AbstractLineFunction,
                          h₀ :: Float64,
                          g₀ :: Float64,

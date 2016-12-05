@@ -1,3 +1,4 @@
+export Biss_Nwt_ls
 function Biss_Nwt_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,

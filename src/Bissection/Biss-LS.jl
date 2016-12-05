@@ -1,3 +1,4 @@
+export Biss_ls
 function Biss_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,
@@ -41,7 +42,7 @@ function Biss_ls(h :: AbstractLineFunction,
    end
 
    iter=iter+1
-   
+
    admissible = (dφp>=ɛa) & (dφp<=ɛb)
    tired = iter > maxiter
 
