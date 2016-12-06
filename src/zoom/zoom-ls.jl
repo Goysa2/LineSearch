@@ -6,7 +6,7 @@ function zoom_ls(h :: AbstractLineFunction,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  ϵ :: Float64=1e-5,
-                 maxiter :: Int=10,
+                 maxiter :: Int=30,
                  verbose :: Bool=false)
 
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
@@ -41,13 +41,13 @@ function zoom_ls(h :: AbstractLineFunction,
   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   while !(admissible | tired)
     φt=φ(ti)
-    if (φt>0) | (φt>φlow)
+    if (φt>0) | (φt>=φlow)
       thi=ti
       φthi=φti
       dφhi=dφti
     else
       dφti=dφ(ti)
-      if (abs(dφti)<ϵ)
+      if (abs(dφti)<-τ₁*g₀)
         println("abs(dφti)<ϵ")
         topt=ti
         ht = φti + h₀ + τ₀*ti*g₀
