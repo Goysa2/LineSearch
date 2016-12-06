@@ -1,13 +1,15 @@
+export trouve_intervalleA_ls
 function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                h₀ :: Float64,
                                g₀ :: Float64,
                                t₀ :: Float64,
                                tmax :: Float64,
+                               methode :: Function,
                                g :: Array{Float64,1};
                                τ₀ :: Float64=1.0e-4,
                                τ₁ :: Float64=0.9999,
                                ϵ :: Float64=1e-5,
-                               maxiter :: Int=10,
+                               maxiter :: Int=30,
                                verbose :: Bool=false)
 
     t=1.0
@@ -55,14 +57,14 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
       φti=φ(ti)
       if (φti>0.0) | ((φti>φti) & (i>1))
         println("premier appel de zoom")
-        (topt,admissible,ht,i)=zoom_ls(h,h₀,g₀,tim1,ti,verbose=true)
+        (topt,admissible,ht,i)=methode(h,h₀,g₀,tim1,ti,verbose=true)
         return (topt,admissible,ht,i)
       end
 
       dφtim1=dφti
       dφti=dφ(ti)
 
-      if (abs(dφti)<=ϵ)
+      if (abs(dφti)<=-τ₁*g₀)
         iter=i
         topt=ti
         ht= φti + h₀ + τ₀*ti*g₀
@@ -72,7 +74,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
 
       if (dφti>= -t₀*h₀)
         println("deuxième appelle de zoom")
-        (topt,admissible,ht,i)=zoom_ls(h,h₀,g₀,ti,tim1,verbose=true)
+        (topt,admissible,ht,i)=methode(h,h₀,g₀,ti,tim1,verbose=true)
         return (topt,admissible,ht,i)
       end
       tim1=ti

@@ -1,3 +1,4 @@
+export zoom_secA_ls
 function zoom_secA_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,

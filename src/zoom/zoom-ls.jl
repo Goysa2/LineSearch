@@ -1,3 +1,4 @@
+export zoom_ls
 function zoom_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,

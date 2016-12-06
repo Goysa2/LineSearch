@@ -1,3 +1,4 @@
+export zoom_Cub_ls
 function zoom_Cub_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,
