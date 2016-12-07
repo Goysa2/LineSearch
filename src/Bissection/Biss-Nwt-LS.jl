@@ -10,6 +10,8 @@ function Biss_Nwt_ls(h :: AbstractLineFunction,
                  maxiter :: Int=50,
                  verbose=true)
 
+ println("on est dans Biss_Nwt_ls")
+
  γ=0.8
  t=ta
  tp=tb
@@ -26,15 +28,15 @@ function Biss_Nwt_ls(h :: AbstractLineFunction,
  dφa=dφ(ta)
  dφb=dφ(tb)
 
- ɛa = (τ₁-τ₀)*min(dφa,dφb)
- ɛb = -(τ₁+τ₀)*min(dφa,dφb)
+ ɛa = (τ₁-τ₀)*g₀
+ ɛb = -(τ₁+τ₀)*g₀
  verbose && println("\n ɛa=",ɛa," ɛb=",ɛb," h(0)=", h₀," g₀=",g₀)
 
  admissible=false
  tired =  iter > maxiter
 
  verbose && @printf(" iter        ta        tb         dφa        dφb        \n")
- verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
+ verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
 
  while !(admissible | tired)
 
@@ -79,11 +81,9 @@ function Biss_Nwt_ls(h :: AbstractLineFunction,
    admissible = (dφt>=ɛa) & (dφt<=ɛb)
    tired = iter > maxiter
 
-   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
+   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
  end
  println("admissible=",admissible)
-
- t=(ta+tb)/2
 
 
  ht = φ(t) + h₀ + τ₀*t*g₀

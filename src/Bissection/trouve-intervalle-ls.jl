@@ -30,6 +30,8 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
   φt1=φ(t₁)
   dφt1=dφ(t₁)
 
+  println("vrai valeur de φ(0)=",φ(0.0))
+
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
 

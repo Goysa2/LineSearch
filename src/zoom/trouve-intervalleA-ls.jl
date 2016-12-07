@@ -31,22 +31,14 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
 
     i=0.0
 
-    φtim1=0.0
-
-    i=0.0
-
     φtim1=0.0            #t₀=0.0 => φ(0)=0.0
     dφtim1=(1.0-τ₀)*g₀   #t₀=0.0 => dφ(0)=(1.0-τ₀)*g₀
     φti=φ(ti)
     dφti=dφ(ti)
 
-    println("on a tim1=",tim1," ti=",ti," i=",i," φtim1=",φtim1," dφtim1=",dφtim1," φti=",φti," dφti=",dφti)
-   #t₀=0.0 => φ(0)=0.0
-    dφtim1=(1.0-τ₀)*g₀   #t₀=0.0 => dφ(0)=(1.0-τ₀)*g₀
-    φti=φ(ti)
-    dφti=dφ(ti)
 
-    println("on a tim1=",tim1," ti=",ti," i=",i," φtim1=",φtim1," dφtim1=",dφtim1," φti=",φti," dφti=",dφti)
+    φtim1=0.0 #t₀=0.0 => φ(0)=0.0
+    dφtim1=(1.0-τ₀)*g₀   #t₀=0.0 => dφ(0)=(1.0-τ₀)*g₀
 
     verbose && @printf("iter tim1        dφtim1        φtim1         ti        dφti        φti\n")
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", i, tim1,dφtim1,φtim1,ti,dφti,φti)
@@ -81,7 +73,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
       ti=(tim1+tmax)/2
 
       i=i+1
-      println("i=",i)
       verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", i, tim1,dφtim1,φtim1,ti,dφti,φti)
     end
     iter=i

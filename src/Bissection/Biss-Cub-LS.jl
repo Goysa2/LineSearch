@@ -30,8 +30,8 @@ function Biss_Cub_ls(h :: AbstractLineFunction,
  dφa=dφ(ta)
  dφb=dφ(tb)
 
- ɛa = (τ₁-τ₀)*min(dφa,dφb)
- ɛb = -(τ₁+τ₀)*min(dφa,dφb)
+ ɛa = (τ₁-τ₀)*g₀
+ ɛb = -(τ₁+τ₀)*g₀
  verbose && println("\n ɛa=",ɛa," ɛb=",ɛb," h(0)=", h₀," g₀=",g₀)
 
  admissible=false
@@ -102,7 +102,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction,
  end
  println("admissible=",admissible)
 
- t=(ta+tb)/2
+ # t=(ta+tb)/2
 
 
  ht = φ(t) + h₀ + τ₀*t*g₀
