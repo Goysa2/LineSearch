@@ -12,8 +12,6 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
     ht = obj(h,t)
     gt = grad!(h, t, g)
     #kt =  hess(h,t)
-    println("avant Armijo et Wolfe")
-    println("ht=",ht," gt=",gt)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
       nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
       return (t, true, ht,nftot)
@@ -31,13 +29,10 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
     iter = 0
     t=0.0
     kt=hess(h,t)
-    println("avant de définir φ kt=",kt)
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
     ddφ(t) = hess(h,t)
-    println("apres avoir défini φ et dφ, ddφ(t)=",ddφ(t))
-
     # le reste de l'algo minimise la fonction φ...
     # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
     #
@@ -46,7 +41,6 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
     dφt = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
 
     ddφt = hess(h,0.0)
-    println("juste avant de définir q, ddφt=",ddφt)
     # Version avec la sécante: modèle quadratique
     q(d) = φt + dφt*d + 0.5*ddφt*d^2
 
@@ -54,7 +48,6 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
 
-    verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
     tired=nftot > max_eval
@@ -82,7 +75,7 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
         pred = dφt*d + 0.5*kt*d^2
         #assert(pred<0)   # How to recover? As is, it seems to work...
         if pred >-1e-10
-          ared=(dφt+dφtestTR)*d^2
+          ared=(dφt+dφtestTR)*d/2
         else
           ared=φtestTR-φt
         end
@@ -112,7 +105,6 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
                 Δn = min(-t, Δn)
             end
 
-            println("ɛa=",ɛa," dφt=",dφt," ɛb=",ɛb)
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
             verbose && @printf("N %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);

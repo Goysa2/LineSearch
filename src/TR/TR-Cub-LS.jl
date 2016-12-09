@@ -68,8 +68,6 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
         cub(t)= φt + dφt*t + A*t^2 + B*t^3
         dcub(t)=dφt + 2*A*t + 3*B*t^2
-        println("dφt=",dφt," A=",A," B=",B)
-
         dR=roots(dcub)
 
         if isreal(dR)
@@ -86,10 +84,7 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
         if (abs(dN2)<abs(Δp-Δn)) & (q(d)>q(dN2))
           d=dN2
-          println("d=dN2 donc d=",d)
         end
-
-        println("d=",d)
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
@@ -99,7 +94,7 @@ function TR_Cub_ls(h :: AbstractLineFunction,
         pred = dφt*d + A*d^2 + B*d^3
         #assert(pred<0)   # How to recover? As is, it seems to work...
         if pred >-1e-10
-          ared=(dφt+dφtestTR)*d^2
+          ared=(dφt+dφtestTR)*d/2
         else
           ared=φtestTR-φt
         end
@@ -115,23 +110,17 @@ function TR_Cub_ls(h :: AbstractLineFunction,
             verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
         else             # Successful
             t = t + d
-            println("t=",t)
             dφt = dφtestTR
             φt = φtestTR
 
             s = t-tprec
             y = dφt - dφtprec
-            println("s=",s," y=",y)
             α=-s
             z= dφt + dφtprec + 3*(φt-φtprec)/α
-            println("α=",α," z=",z)
             discr = z^2-dφtprec*dφt
             denom = dφt + dφtprec + 2*z
-            println("discr=",discr," denom=",denom)
             B= 1/3*(dφt+dφtprec+2*z)/(α*α)
             A=-(dφt+z)/α
-            println("A=",A," B=",B)
-
 
             if ratio > eps2
                 Δp = aug * Δp

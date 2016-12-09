@@ -50,7 +50,6 @@ function zoom_ls(h :: AbstractLineFunction,
     else
       dφti=dφ(ti)
       if ((dφti>=ɛa) & (dφti<=ɛb))
-        println("abs(dφti)<ϵ")
         topt=ti
         ht = φti + h₀ + τ₀*ti*g₀
         nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod

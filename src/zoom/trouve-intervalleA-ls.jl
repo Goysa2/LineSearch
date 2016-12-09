@@ -14,16 +14,12 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     t=1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)
-    println("on a t=",t," ht=",ht," gt=",gt)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
         return (t,true,ht,0)
     end
-    println("Armijo && Wolfe failed")
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
-
-    println("on a φ(t) & dφ(t)")
 
     tim1=t₀
     ti=(tim1+tmax)/2
@@ -49,7 +45,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
       φtim1=φti
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (i>1))
-        println("premier appel de zoom")
         (topt,good_grad,ht,i)=methode(h,h₀,g₀,tim1,ti,verbose=false)
         return (topt,good_grad,ht,i)
       end
@@ -67,7 +62,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
       end
 
       if (dφti>= -t₀*h₀)
-        println("deuxième appelle de zoom")
         (topt,good_grad,ht,i)=methode(h,h₀,g₀,ti,tim1,verbose=true)
         return (topt,good_grad,ht,i)
       end
@@ -76,7 +70,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
 
       i=i+1
       nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-      #tired = i>30
       verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", i, tim1,dφtim1,φtim1,ti,dφti,φti)
     end
     iter=i

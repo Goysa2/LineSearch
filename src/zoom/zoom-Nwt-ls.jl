@@ -49,14 +49,11 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
   verbose && @printf(" %7.2e %7.3e  %7.3e  %7.3e  %7.3e %7.3e %7.3e %7.3e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
   while !(admissible | tired)
     if (φt>0) | (φt>=φlow)
-      println("(φt>0)",(φt>0),"(φt>=φlow)",(φt>=φlow))
       thi=t
       φthi=φt
       dφhi=dφt
     else
-      println("(φt<0) | (φt<φlow)")
       if ((dφt>=ɛa) & (dφt<=ɛb))
-        println("abs(dφti)<ϵ")
         topt=t
         ht = φt + h₀ + τ₀*t*g₀
         admissible=true
@@ -64,12 +61,10 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
       end
 
       if (dφt*(thi-tlow)>=-τ₀*g₀*(thi-tlow))
-        println("(dφt*(thi-tlow)>=-τ₀*g₀*(thi-tlow))")
         thi=tlow
         φhi=φlow
         dφhi=dφlow
       end
-      println("tlow=t")
       tlow=t
       φlow=φt
       dφlow=dφt

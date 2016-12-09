@@ -1,15 +1,12 @@
 export ARC_Cub_ls
 function ARC_Cub_ls(h :: AbstractLineFunction,
-                  h₀ :: Float64,
-                  g₀ :: Float64,
-                  g :: Array{Float64,1};
-                  τ₀ :: Float64=1.0e-4,
-                  τ₁ :: Float64=0.9999,
-                  bk_max :: Int=10,
-                  nbWM :: Int=5,
-                  verbose :: Bool=false)
-
-    maxiter=nbWM*bk_max
+                   h₀ :: Float64,
+                   g₀ :: Float64,
+                   g :: Array{Float64,1};
+                   τ₀ :: Float64=1.0e-4,
+                   τ₁ :: Float64=0.9999,
+                   max_eval :: Int64=100,
+                   verbose :: Bool=false)
 
     t = 1.0
     ht = obj(h,t)
@@ -28,16 +25,12 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
     Δn = 0.0  # <=0
 
     iter = 0
-    # seck = 1.0 #(gt-g₀)
-    # dN=-gt #pour la première itération
     t=0.0
     gt=grad(h,t)
     dN=-gt #pour la premiere iteration
 
     A=0.5
     B=0.0
-
-
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
@@ -56,7 +49,8 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
 
     verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
-    tired =  iter > maxiter
+    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+    tired=nftot > max_eval
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n");
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp);
 
@@ -76,7 +70,6 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
             vact=Quad(rr)
             if rr*dφt<0
               if vact<vmin
-                #println("deuxième &")
                 dN=rr
                 vmin=vact
               end
@@ -94,7 +87,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
         pred = dφt*d + A*d^2 + B*d^3
         #assert(pred<0)   # How to recover? As is, it seems to work...
         if pred >-1e-10
-          ared=(dφt+dφtestTR)*d^2
+          ared=(dφt+dφtestTR)*d/2
         else
           ared=φtestTR-φt
         end
@@ -124,7 +117,6 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
             B=(1/3)*(dφt+dφtprec+2*z)/(α*α)
             A=-(dφt+z)/α
 
-            #verbose && println("\n dS=",dS," y=",y," s=",s)
             if ratio > eps2
                 Δp = aug * Δp
                 Δn = min(-t, aug * Δn)
@@ -138,12 +130,13 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
 
 
         iter=iter+1
-        tired = iter > maxiter
+        nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+        tired=nftot > max_eval
     end;
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
 
-    return (t, admissible, ht, iter,0)  #pourquoi le true et le 0?
+    return (t,true, ht, nftot)  #pourquoi le true et le 0?
 
 end

@@ -5,17 +5,15 @@ function Biss_ls(h :: AbstractLineFunction,
                  g :: Array{Float64,1};
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
-                 bk_max :: Int=10,
-                 nbWM :: Int=5,
+                 max_eval :: Int64=100,
                  verbose :: Bool=false)
-
-maxiter=nbWM*bk_max
 
 inc0=g[1]
 
-(ta,tb, admissible, ht,iter)=trouve_intervalle_ls(h,h₀,g₀,inc0,g,verbose=false)
+(ta,tb, admissible, ht,iter)=trouve_intervalle_ls(h,h₀,g₀,inc0,g)
 if admissible==true
-  return (ta, admissible, ht,iter)
+  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+  return (ta,true, ht,nftot)
 end
 
 g=[0.0]
@@ -30,10 +28,10 @@ g=[0.0]
 
  ɛa = (τ₁-τ₀)*g₀
  ɛb = -(τ₁+τ₀)*g₀
- verbose && println("\n ɛa=",ɛa," ɛb=",ɛb," h(0)=", h₀," g₀=",g₀)
 
  admissible=false
- tired =  iter > maxiter
+ nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+ tired=nftot > max_eval
 
  verbose && @printf(" iter        ta        tb         dφa        dφb        \n")
  verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
@@ -53,15 +51,15 @@ g=[0.0]
    iter=iter+1
 
    admissible = (dφp>=ɛa) & (dφp<=ɛb)
-   tired = iter > maxiter
+   nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+   tired=nftot > max_eval
 
    verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
  end
- println("admissible=",admissible)
 
  t=(ta+tb)/2
 
 
  ht = φ(t) + h₀ + τ₀*t*g₀
- return (t,admissible,ht,iter,0)
+ return (t,true,ht,nftot)
 end

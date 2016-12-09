@@ -6,7 +6,7 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
                               g :: Array{Float64,1};
                               τ₀ :: Float64=1.0e-4,
                               τ₁ :: Float64=0.9999,
-                              maxiter :: Int=10,
+                              max_eval :: Int=100,
                               verbose :: Bool=false)
   g=[0.0]
   t=1.0
@@ -21,7 +21,6 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
   inc=inc0
   sd=-sign(g₀)
   t₁=t+sd*inc
-  println("inc=",inc," sd=",sd," t₁=",t₁)
 
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
   dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
@@ -31,16 +30,13 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
   φt1=φ(t₁)
   dφt1=dφ(t₁)
 
-  println("vrai valeur de φ(0)=",φ(0.0))
-
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
-
+  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
   verbose && @printf("iter t        dφt        φt         t1        φt1        dφt1\n")
   verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t,φt,dφt,t₁,dφt1,φt1)
 
-  while (dφt1*sd<0.0) & (φt1<φt) & (iter<maxiter)
-    println("on est dans le 1er while de trouve_intervalle_ls")
+  while (dφt1*sd<0.0) & (φt1<φt) & (nftot<max_eval)
     inc=inc*4
     t=t₁
     φt=φt1
@@ -49,12 +45,12 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
     φt1=φ(t₁)
     dφt1=dφ(t₁)
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t,φt,dφt,t₁,dφt1,φt1)
+    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
     iter=iter+1
 
   end
 
-  while (dφt1*sd<0.0) & (iter<maxiter)
-    println("on est dans le 2e while de trouve_intervalle_ls")
+  while (dφt1*sd<0.0) & (nftot<max_eval)
     tₘ=(t₁+t)/2
     φₘ=φ(tₘ)
     dφₘ=dφ(tₘ)
@@ -74,6 +70,7 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
       end
     end
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t,φt,dφt,t₁,dφt1,φt1)
+    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
     iter=iter+1
   end
 

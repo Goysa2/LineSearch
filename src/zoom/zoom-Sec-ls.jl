@@ -55,7 +55,6 @@ function zoom_sec_ls(h :: AbstractLineFunction,
     else
       #dφti=dφ(ti)
       if ((dφt>=ɛa) & (dφt<=ɛb))
-        println("abs(dφti)<ϵ")
         topt=t
         ht = φt + h₀ + τ₀*t*g₀
         admissible=true

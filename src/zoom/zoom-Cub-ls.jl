@@ -40,8 +40,6 @@ function zoom_Cub_ls(h :: AbstractLineFunction,
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
 
-  println("ɛa=",ɛa," ɛb=",ɛb)
-
   admissible=false
   nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
   tired=nftot > max_eval
@@ -57,7 +55,6 @@ function zoom_Cub_ls(h :: AbstractLineFunction,
     else
       #dφti=dφ(ti)
       if ((dφt>=ɛa) & (dφt<=ɛb))
-        println("abs(dφti)<ϵ")
         topt=t
         ht = φt + h₀ + τ₀*t*g₀
         admissible=true

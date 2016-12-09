@@ -46,7 +46,6 @@ function TR_Sec_ls(h :: AbstractLineFunction,
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
 
-    verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
     tired=nftot > max_eval
@@ -56,7 +55,6 @@ function TR_Sec_ls(h :: AbstractLineFunction,
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
         dS = -dφt/seck; # point stationnaire de q(d)
-        #verbose && println("\n dS=",dS," -dφt=",-dφt," seck=",seck)
 
         if (q(Δp)<q(Δn)) | (Δn==0.0)
             d=Δp
@@ -70,10 +68,9 @@ function TR_Sec_ls(h :: AbstractLineFunction,
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
-        # test d'arrêt sur dφ
+
 
         pred = dφt*d + 0.5*seck*d^2
-        #assert(pred<0)   # How to recover? As is, it seems to work...
         if pred >-1e-10
           ared=(dφt+dφtestTR)*d/2
         else
@@ -95,7 +92,6 @@ function TR_Sec_ls(h :: AbstractLineFunction,
             s = t-tprec
             y = dφt - dφtprec
             seck = y/s
-            verbose && println("\n dS=",dS," y=",y," s=",s)
             if ratio > eps2
                 Δp = aug * Δp
                 Δn = min(-t, aug * Δn)
