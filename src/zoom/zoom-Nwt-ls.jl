@@ -7,7 +7,7 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  ϵ :: Float64=1e-5,
-                 maxiter :: Int=30,
+                 max_eval :: Int=100,
                  verbose :: Bool=false)
 
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
@@ -42,19 +42,20 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
   ɛb = -(τ₁+τ₀)*g₀
 
   admissible=false
-  tired=iter>maxiter
+  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+  tired=nftot > max_eval
 
   verbose && @printf(" iter        tlow        thi         t        φlow       φhi         φt         dφt\n")
-  verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
+  verbose && @printf(" %7.2e %7.3e  %7.3e  %7.3e  %7.3e %7.3e %7.3e %7.3e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
   while !(admissible | tired)
-    #φt=φ(ti)
     if (φt>0) | (φt>=φlow)
+      println("(φt>0)",(φt>0),"(φt>=φlow)",(φt>=φlow))
       thi=t
       φthi=φt
       dφhi=dφt
     else
-      #dφti=dφ(ti)
-      if (abs(dφt)<-τ₁*g₀)
+      println("(φt<0) | (φt<φlow)")
+      if ((dφt>=ɛa) & (dφt<=ɛb))
         println("abs(dφti)<ϵ")
         topt=t
         ht = φt + h₀ + τ₀*t*g₀
@@ -63,11 +64,12 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
       end
 
       if (dφt*(thi-tlow)>=-τ₀*g₀*(thi-tlow))
+        println("(dφt*(thi-tlow)>=-τ₀*g₀*(thi-tlow))")
         thi=tlow
         φhi=φlow
         dφhi=dφlow
       end
-
+      println("tlow=t")
       tlow=t
       φlow=φt
       dφlow=dφt
@@ -108,17 +110,15 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
       end
     end
 
-
     φtm1=φt
     dφtm1=dφt
     φt=φplus
     dφt=dφplus
 
-
-    admissible = (dφt>=ɛa) & (dφt<=ɛb)
     iter+=1
-    tired = iter > maxiter
-    verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
+    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+    tired = nftot > max_eval
+    verbose && @printf(" %7.2e %7.3e  %7.3e  %7.3e  %7.3e %7.3e %7.3e %7.3e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
   end
 
   topt=t

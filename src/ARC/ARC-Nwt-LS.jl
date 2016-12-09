@@ -5,8 +5,12 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
                   g :: Array{Float64,1};
                   τ₀ :: Float64=1.0e-4,
                   τ₁ :: Float64=0.9999,
-                  maxiter :: Int=10,
-                  verbose :: Bool=true)
+                  bk_max :: Int=10,
+                  nbWM :: Int=5,
+                  verbose :: Bool=false)
+
+    maxiter=nbWM*bk_max
+    
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)

@@ -5,8 +5,9 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
                          g :: Array{Float64,1};
                          τ₀ :: Float64=1.0e-4,
                          τ₁ :: Float64=0.9999,
-                         maxiter :: Int=10,
-                         verbose :: Bool=true)
+                         max_eval :: Int64=100,
+                         verbose :: Bool=false)
+
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)
@@ -14,7 +15,8 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
     println("avant Armijo et Wolfe")
     println("ht=",ht," gt=",gt)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t, true, ht, 0, 0)
+      nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+      return (t, true, ht,nftot)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -54,7 +56,8 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
 
     verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
-    tired =  iter > maxiter
+    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+    tired=nftot > max_eval
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n")
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
 
@@ -117,12 +120,13 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
 
 
         iter=iter+1
-        tired = iter > maxiter
+        nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
+        tired=nftot > max_eval
     end;
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
 
-    return (t, true, ht, iter,0)  #pourquoi le true et le 0?
+    return (t, true, ht,nftot)  #pourquoi le true et le 0?
 
 end

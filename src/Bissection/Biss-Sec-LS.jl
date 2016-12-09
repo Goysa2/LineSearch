@@ -2,13 +2,23 @@ export Biss_Sec_ls
 function Biss_Sec_ls(h :: AbstractLineFunction,
                  h₀ :: Float64,
                  g₀ :: Float64,
-                 ta :: Float64,
-                 tb :: Float64;
+                 g :: Array{Float64,1};
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
-                 tol :: Float64=1e-7,
-                 maxiter :: Int=50,
-                 verbose=true)
+                 bk_max :: Int=10,
+                 nbWM :: Int=5,
+                 verbose :: Bool=false)
+
+maxiter=nbWM*bk_max
+
+inc0=g[1]
+
+(ta,tb, admissible, ht,iter)=trouve_intervalle_ls(h,h₀,g₀,inc0,g,verbose=false)
+if admissible==true
+  return (ta, admissible, ht,iter)
+end
+
+g=[0.0]
 
  γ=0.8
  t=ta

@@ -8,6 +8,7 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
                               τ₁ :: Float64=0.9999,
                               maxiter :: Int=10,
                               verbose :: Bool=false)
+  g=[0.0]
   t=1.0
   ht = obj(h,t)
   gt = grad!(h, t, g)
