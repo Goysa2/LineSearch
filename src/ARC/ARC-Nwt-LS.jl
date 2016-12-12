@@ -5,7 +5,7 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   max_eval :: Int64=100,
+                   nftot_max :: Int64=100,
                    verbose :: Bool=false)
 
     t = 1.0
@@ -47,7 +47,7 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
     verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired=nftot > max_eval
+    tired=nftot > nftot_max
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n");
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp);
 
@@ -116,7 +116,7 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
 
         iter=iter+1
         nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-        tired=nftot > max_eval
+        tired=nftot > nftot_max
     end;
 
     # recover h

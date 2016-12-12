@@ -7,7 +7,7 @@ function zoom_ls(h :: AbstractLineFunction,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  ϵ :: Float64=1e-5,
-                 max_eval :: Int=100,
+                 nftot_max :: Int=100,
                  verbose :: Bool=false)
 
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
@@ -37,7 +37,7 @@ function zoom_ls(h :: AbstractLineFunction,
 
   admissible=false
   nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-  tired=nftot > max_eval
+  tired=nftot > nftot_max
 
   verbose && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
@@ -71,7 +71,7 @@ function zoom_ls(h :: AbstractLineFunction,
     ti=(tlow+thi)/2
     iter+=1
     nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired = nftot > max_eval
+    tired = nftot > nftot_max
     verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   end
 

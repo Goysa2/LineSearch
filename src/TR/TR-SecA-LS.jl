@@ -5,8 +5,9 @@ function TR_SecA_ls(h :: AbstractLineFunction,
                          g :: Array{Float64,1};
                          τ₀ :: Float64=1.0e-4,
                          τ₁ :: Float64=0.9999,
-                         max_eval :: Int64=100,
-                         verbose :: Bool=false)
+                         nftot_max :: Int64=100,
+                         verbose :: Bool=false,
+                         kwargs...)
 
     t = 1.0
     ht = obj(h,t)
@@ -29,8 +30,6 @@ function TR_SecA_ls(h :: AbstractLineFunction,
     seck = 1.0 #(gt-g₀)
     t=0.0
 
-
-
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
@@ -47,10 +46,10 @@ function TR_SecA_ls(h :: AbstractLineFunction,
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
 
-    verbose &&println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired=nftot > max_eval
+    tired=nftot > nftot_max
+
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
 
@@ -122,12 +121,11 @@ function TR_SecA_ls(h :: AbstractLineFunction,
 
         iter=iter+1
         nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-        tired=nftot > max_eval
+        tired=nftot > nftot_max
     end;
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-
     return (t,true, ht, nftot)  #pourquoi le true et le 0?
 
 end

@@ -5,7 +5,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   max_eval :: Int64=100,
+                   nftot_max :: Int64=100,
                    verbose :: Bool=false)
 
 inc0=g[1]
@@ -42,7 +42,7 @@ g=[0.0]
  ɛb = -(τ₁+τ₀)*g₀
  admissible=false
  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
- tired =  nftot>max_eval
+ tired =  nftot>nftot_max
 
  verbose && @printf(" iter        ta        tb         dφa        dφb        \n")
  verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
@@ -104,7 +104,7 @@ g=[0.0]
    iter=iter+1
    admissible = (dφt>=ɛa) & (dφt<=ɛb)
    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-   tired=nftot > max_eval
+   tired=nftot > nftot_max
 
    verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
  end

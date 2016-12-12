@@ -8,7 +8,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                τ₁ :: Float64=0.9999,
                                t₀ :: Float64=0.0,
                                tmax :: Float64=50.0,
-                               max_eval :: Int=100,
+                               nftot_max :: Int=100,
                                verbose :: Bool=false)
 
     t=1.0
@@ -41,7 +41,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     verbose && @printf("iter tim1        dφtim1        φtim1         ti        dφti        φti\n")
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", i, tim1,dφtim1,φtim1,ti,dφti,φti)
 
-    while nftot<max_eval
+    while nftot<nftot_max
       φtim1=φti
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (i>1))
