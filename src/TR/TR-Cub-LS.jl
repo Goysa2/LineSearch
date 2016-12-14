@@ -5,15 +5,14 @@ function TR_Cub_ls(h :: AbstractLineFunction,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   nftot_max :: Int64=100,
+                   maxiter :: Int64=50,
                    verbose :: Bool=false)
 
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-        return (t, true, ht,nftot)
+        return (t, true, ht, 0, 0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -26,8 +25,6 @@ function TR_Cub_ls(h :: AbstractLineFunction,
     Δn = 0.0  # <=0
 
     iter = 0
-    # seck = 1.0 #(gt-g₀)
-    # dN=-gt #pour la première itération
     t=0.0
     gt=grad(h,t)
     dN=-gt #pour la premiere iteration
@@ -53,8 +50,7 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
     verbose &&println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
-    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired=nftot > nftot_max
+    tired=iter > maxiter
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
 
@@ -131,22 +127,13 @@ function TR_Cub_ls(h :: AbstractLineFunction,
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
             verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
-            if t==tprec
-              ht = φt + h₀ + τ₀*t*g₀
-              nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-              return (t, true, ht,nftot)
-            end
         end;
-
-
-        iter=iter+1
-        nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-        tired=nftot > nftot_max
-    end;
+        iter+=1
+        tired=iter>maxiter
+    end
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-
-    return (t, true, ht,nftot)  #pourquoi le true et le 0?
+    return (t,true, ht, iter,0)   #pourquoi le true et le 0?
 
 end

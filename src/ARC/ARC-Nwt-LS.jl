@@ -5,14 +5,16 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   nftot_max :: Int64=100,
+                   maxiter :: Int64=50,
                    verbose :: Bool=false)
+
+    #println("on est dans ARC_Nwt_ls")
 
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t, true, ht, 0, 0)
+        return (t,true, ht, 0,0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -36,7 +38,7 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
 
     dφt = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
     # Version avec la sécante: modèle quadratique
-    ddφt = hess(h,0.0)
+    ddφt = ddφ(0.0)
 
     q(d) = φt + dφt*d + 0.5*ddφt*d^2
 
@@ -44,10 +46,8 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
 
-    verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
-    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired=nftot > nftot_max
+    tired=iter>maxiter
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n");
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp);
 
@@ -113,15 +113,13 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
             verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
         end;
 
-
         iter=iter+1
-        nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-        tired=nftot > nftot_max
+        tired=iter>maxiter
     end;
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-
-    return (t, true, ht,nftot)  #pourquoi le true et le 0?
+    #println("on quite ARC_Nwt_ls")
+    return (t,true, ht, iter,0)  #pourquoi le true et le 0?
 
 end

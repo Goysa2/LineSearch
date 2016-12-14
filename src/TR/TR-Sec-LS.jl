@@ -5,16 +5,14 @@ function TR_Sec_ls(h :: AbstractLineFunction,
                   g :: Array{Float64,1};
                   τ₀ :: Float64=1.0e-4,
                   τ₁ :: Float64=0.9999,
-                  bk_max :: Int=10,
-                  nftot_max :: Int64=100,
+                  maxiter :: Int=50,
                   verbose :: Bool=false)
 
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-      nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-      return (t, true, ht, nftot)
+      return (t, true, ht, 0,0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -48,13 +46,14 @@ function TR_Sec_ls(h :: AbstractLineFunction,
     ɛb = -(τ₁+τ₀)*g₀
 
     admissible = false
-    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired=nftot > nftot_max
+    tired=iter > maxiter
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n");
     verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
-
+      if iter==0
+        #println("on rentre la dedans")
+      end
         dS = -dφt/seck; # point stationnaire de q(d)
 
         if (q(Δp)<q(Δn)) | (Δn==0.0)
@@ -103,16 +102,10 @@ function TR_Sec_ls(h :: AbstractLineFunction,
                                                 # descente
             verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
         end;
-
-
-        iter=iter+1
-        nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-        tired=nftot > nftot_max
+        iter+=1
+        tired=iter>maxiter
     end;
 
-    # recover h
     ht = φt + h₀ + τ₀*t*g₀
-
-    return (t, true, ht, nftot)  #pourquoi le true et le 0?
-
+    return (t,true, ht, iter,0)  #pourquoi le true et le 0?
 end
