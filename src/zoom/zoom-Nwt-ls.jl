@@ -7,8 +7,9 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  ϵ :: Float64=1e-5,
-                 nftot_max :: Int=100,
+                 maxiter :: Int=50,
                  verbose :: Bool=false)
+
 
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
   dφ(t) = grad(h,t) - τ₀*g₀    # dérivée
@@ -27,14 +28,13 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
   φhi=φ(thi)
   dφhi=dφ(thi)
 
-  γ=0.8
-  t=t₁
+  ti=t₁
   tp=t₀
   tqnp=t₀
   iter=0
 
-  φt=φ(t)
-  dφt=dφ(t)
+  φti=φ(ti)
+  dφti=dφ(ti)
   φtm1=dφ(tqnp)
   dφtm1=dφ(tqnp)
 
@@ -42,82 +42,83 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
   ɛb = -(τ₁+τ₀)*g₀
 
   admissible=false
-  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-  tired=nftot > nftot_max
+  tired= iter > maxiter
 
-  verbose && @printf(" iter        tlow        thi         t        φlow       φhi         φt         dφt\n")
-  verbose && @printf(" %7.2e %7.3e  %7.3e  %7.3e  %7.3e %7.3e %7.3e %7.3e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
+  verbose && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
+  verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   while !(admissible | tired)
-    if (φt>0) | (φt>=φlow)
-      thi=t
-      φthi=φt
-      dφhi=dφt
+    #φti=φ(ti)
+    if (φti>0) | (φti>=φlow)
+      thi=ti
+      φthi=φti
+      dφhi=dφti
     else
-      if ((dφt>=ɛa) & (dφt<=ɛb))
-        topt=t
-        ht = φt + h₀ + τ₀*t*g₀
-        admissible=true
-        return (topt,admissible,ht,iter)
+      #dφti=dφ(ti)
+      if ((dφti>=ɛa) & (dφti<=ɛb))
+        topt=ti
+        ht = φti + h₀ + τ₀*ti*g₀
+        #println("on sort pcq admissible???")
+        return (topt,false,ht,iter)
       end
 
-      if (dφt*(thi-tlow)>=-τ₀*g₀*(thi-tlow))
+      if (dφti*(thi-tlow)>=-τ₀*g₀*(thi-tlow))
         thi=tlow
         φhi=φlow
         dφhi=dφlow
       end
-      tlow=t
-      φlow=φt
-      dφlow=dφt
+
+      tlow=ti
+      φlow=φti
+      dφlow=dφti
     end
 
-    ddφt=ddφ(t)
-    dN=-dφt/ddφt
+    ddφti=ddφ(ti)
+    dN=-dφti/ddφti
 
-    if ((tp-t)*dN>0) & (dN/(tp-t)<γ)
-      tplus = t + dN
+    if ((tp-ti)*dN>0) & (dN/(tp-ti)<γ)
+      tplus = ti + dN
       φplus = φ(tplus)
       dφplus = dφ(tplus)
       verbose && println("N")
     else
-      tplus = (t+tp)/2
+      tplus = (ti+tp)/2
       φplus = φ(tplus)
       dφplus = dφ(tplus)
       verbose && println("B")
     end
 
-    if t>tp
+    if ti>tp
       if dφplus<0
-        tp=t
-        tqnp=t
-        t=tplus
+        tp=ti
+        tqnp=ti
+        ti=tplus
       else
-        tqnp=t
-        t=tplus
+        tqnp=ti
+        ti=tplus
       end
     else
       if dφplus>0
-        tp=t
-        tqnp=t
-        t=tplus
+        tp=ti
+        tqnp=ti
+        ti=tplus
       else
-        tqnp=t
-        t=tplus
+        tqnp=ti
+        ti=tplus
       end
     end
 
-    φtm1=φt
-    dφtm1=dφt
-    φt=φplus
-    dφt=dφplus
-
+    φtm1=φti
+    dφtm1=dφti
+    φti=φplus
+    dφti=dφplus
     iter+=1
-    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired = nftot > nftot_max
-    verbose && @printf(" %7.2e %7.3e  %7.3e  %7.3e  %7.3e %7.3e %7.3e %7.3e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
+    tired = iter > maxiter
+    verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   end
 
-  topt=t
-  ht = φt + h₀ + τ₀*t*g₀
+  topt=ti
+  ht = φti + h₀ + τ₀*ti*g₀
 
-  return (topt,admissible,ht,iter)
+  #println("on sort parce que fini")
+  return (topt,false,ht,iter)
 end

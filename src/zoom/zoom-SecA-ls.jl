@@ -4,10 +4,11 @@ function zoom_secA_ls(h :: AbstractLineFunction,
                  g₀ :: Float64,
                  t₀ :: Float64,
                  t₁ :: Float64;
+                 γ :: Float64=0.8,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  ϵ :: Float64=1e-5,
-                 nftot_max :: Int=100,
+                 maxiter :: Int=50,
                  verbose :: Bool=false)
 
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
@@ -26,7 +27,6 @@ function zoom_secA_ls(h :: AbstractLineFunction,
   φhi=φ(thi)
   dφhi=dφ(thi)
 
-  γ=0.8
   t=t₁
   tp=t₀
   tqnp=t₀
@@ -41,8 +41,7 @@ function zoom_secA_ls(h :: AbstractLineFunction,
   ɛb = -(τ₁+τ₀)*g₀
 
   admissible=false
-  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-  tired=nftot > nftot_max
+  tired=iter > maxiter
 
   verbose && @printf(" iter        tlow        thi         t        φlow       φhi         φt         dφt\n")
   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
@@ -57,8 +56,7 @@ function zoom_secA_ls(h :: AbstractLineFunction,
       if ((dφt>=ɛa) & (dφt<=ɛb))
         topt=t
         ht = φt + h₀ + τ₀*t*g₀
-        admissible=true
-        return (topt,admissible,ht,iter)
+        return (topt,false,ht,iter)
       end
 
       if (dφt*(thi-tlow)>=-τ₀*g₀*(thi-tlow))
@@ -125,13 +123,12 @@ function zoom_secA_ls(h :: AbstractLineFunction,
     dφt=dφplus
 
     iter+=1
-    nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-    tired = nftot > nftot_max
+    tired = iter > maxiter
     verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,t,φlow,φhi,φt,dφt)
   end
 
   topt=t
   ht = φt + h₀ + τ₀*t*g₀
 
-  return (topt,admissible,ht,iter)
+  return (topt,false,ht,iter)
 end

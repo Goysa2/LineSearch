@@ -1,31 +1,38 @@
 export Biss_Cub_ls
 function Biss_Cub_ls(h :: AbstractLineFunction,
-                   h₀ :: Float64,
-                   g₀ :: Float64,
-                   g :: Array{Float64,1};
-                   τ₀ :: Float64=1.0e-4,
-                   τ₁ :: Float64=0.9999,
-                   nftot_max :: Int64=100,
-                   verbose :: Bool=false)
+                     h₀ :: Float64,
+                     g₀ :: Float64,
+                     g :: Array{Float64,1};
+                     γ :: Float64=0.55,
+                     τ₀ :: Float64=1.0e-4,
+                     τ₁ :: Float64=0.9999,
+                     maxiter :: Int=100,
+                     verbose :: Bool=false)
 
-inc0=g[1]
+ t = 1.0
+ ht = obj(h,t)
+ gt = grad!(h, t, g)
+ if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
+   return (t, true, ht, 0,0)
+ end
 
-(ta,tb, admissible, ht,iter)=trouve_intervalle_ls(h,h₀,g₀,inc0,g)
-if admissible==true
-  nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-  return (ta,true, ht,nftot)
-end
+ #println("au début de Biss_Cub_ls g₀=",g₀)
 
-g=[0.0]
+ (ta,tb)=trouve_intervalle_ls(h,h₀,g₀,g)
+
+ #println("on est après le trouve_intervalle_ls")
 
  γ=0.8
- t=ta
- tp=tb
- tqnp=tb
+ t=tb
+ tp=ta
+ tqnp=ta
  iter=0
 
  φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
  dφ(t) = grad(h,t) - τ₀*g₀    # dérivée
+
+ #println("ta=",ta," tb=",tb)
+ #println("dφa=",dφ(ta)," dφb=",dφ(tb))
 
 
  iter=0
@@ -41,11 +48,10 @@ g=[0.0]
  ɛa = (τ₁-τ₀)*g₀
  ɛb = -(τ₁+τ₀)*g₀
  admissible=false
- nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
- tired =  nftot>nftot_max
+ tired =  iter>maxiter
 
- verbose && @printf(" iter        ta        tb         dφa        dφb        \n")
- verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
+ verbose && @printf(" iter        tqnp        t         dφtm1        dφt        \n")
+ verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
 
  while !(admissible | tired)
 
@@ -95,7 +101,7 @@ g=[0.0]
        t=tplus
      end
    end
-
+   #println("tp=",tp," t=",t)
    φtm1=φt
    dφtm1=dφt
    φt=φplus
@@ -103,15 +109,11 @@ g=[0.0]
 
    iter=iter+1
    admissible = (dφt>=ɛa) & (dφt<=ɛb)
-   nftot=h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod
-   tired=nftot > nftot_max
+   tired=iter>maxiter
 
-   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,ta,tb,dφa,dφb)
+   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
  end
 
- # t=(ta+tb)/2
-
-
  ht = φ(t) + h₀ + τ₀*t*g₀
- return (t,true,ht,nftot)
+ return (t,false,ht,iter,0)
 end
