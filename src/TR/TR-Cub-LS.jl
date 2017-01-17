@@ -11,8 +11,12 @@ function TR_Cub_ls(h :: AbstractLineFunction,
     t = 1.0
     ht = obj(h,t)
     gt = grad!(h, t, g)
-    if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t, true, ht, 0, 0)
+
+    cond_Armijo=Armijo(t,ht,gt,h₀,g₀,τ₀)
+    cond_Wolfe=Wolfe(gt,g₀,τ₁)
+
+    if cond_Armijo && cond_Wolfe
+      return (t, true, ht, 0,0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -21,11 +25,21 @@ function TR_Cub_ls(h :: AbstractLineFunction,
     eps2 = 0.7
     red = 0.15
     aug = 10
-    Δp = 1.0  # >=0
-    Δn = 0.0  # <=0
+    #Δp = 1.0  # >=0
+    #Δn = 0.0  # <=0
+
+    if cond_Armijo
+      Δp = 1.0  # >=0
+      Δn = -1.0  # <=0
+      t=1.0
+    else
+      Δp = 1.0  # >=0
+      Δn = 0.0  # <=0
+      t=0.0
+    end
 
     iter = 0
-    t=0.0
+    #t=0.0
     gt=grad(h,t)
     dN=-gt #pour la premiere iteration
 
@@ -38,9 +52,9 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
     # le reste de l'algo minimise la fonction φ...
     # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    φt = 0.0          # on sait que φ(0)=0
+    φt = φ(t)          # on sait que φ(0)=0
 
-    dφt = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
+    dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
     # Version avec la sécante: modèle quadratique
     q(d)=φt + dφt*d + A*d^2 + B*d^3
 
