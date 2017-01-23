@@ -9,44 +9,16 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
                   verbose :: Bool=false)
 
     t = 1.0
-    ht = obj(h,t)
-    gt = grad!(h, t, g)
+    (t,ht,gt,A_W,Δp,Δn,eps1,eps2,red,aug,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
-    cond_Armijo=Armijo(t,ht,gt,h₀,g₀,τ₀)
-    cond_Wolfe=Wolfe(gt,g₀,τ₁)
-
-    if cond_Armijo && cond_Wolfe
-      return (t, true, ht, 0,0)
-    end
-
-    if cond_Armijo
-      Δp = 1.0  # >=0
-      Δn = -1.0  # <=0
-      t=1.0
-    else
-      Δp = 1.0  # >=0
-      Δn = 0.0  # <=0
-      t=0.0
+    if A_W
+      return (t,true,ht,0.0,0.0)
     end
 
     kt=hess(h,t)
 
-
-
-    # Specialized TR for handling non-negativity constraint on t
-    # Trust region parameters
-    eps1 = 0.1
-    eps2 = 0.7
-    red = 0.15
-    aug = 10
-    #Δp = 1.0  # >=0
-    #Δn = 0.0  # <=0
-
     iter = 0
     seck = 1.0 #(gt-g₀)
-    #t=0.0
-
-
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
@@ -60,10 +32,6 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
     ddφt = hess(h,t)
     # Version avec la sécante: modèle quadratique
     q(d) = φt + dφt*d + 0.5*ddφt*d^2
-
-    # test d'arrêt sur dφ
-    ɛa = (τ₁-τ₀)*g₀
-    ɛb = -(τ₁+τ₀)*g₀
 
     admissible = false
     tired=iter > maxiter

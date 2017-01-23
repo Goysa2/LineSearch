@@ -17,6 +17,7 @@ include("TR/TR-Cub-LS.jl")
 include("TR/TR-Nwt-LS.jl")
 include("TR/TR-Sec-LS.jl")
 include("TR/TR-SecA-LS.jl")
+include("TR/init-TR.jl")
 
 include("zoom/trouve-intervalleA-ls.jl")
 include("zoom/zoom-ls.jl")
