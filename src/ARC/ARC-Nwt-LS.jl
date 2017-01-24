@@ -23,8 +23,7 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
     eps2 = 0.7
     red = 0.15
     aug = 10
-    Δp = 1.0  # >=0
-    Δn = 0.0  # <=0
+    α=1.0
 
     iter = 0
     t=0.0
@@ -48,21 +47,21 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
 
     admissible = false
     tired=iter>maxiter
-    verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n");
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp);
+    verbose && @printf("   iter   t       φt        dφt        α\n");
+    verbose && @printf(" %4d %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
-      discr=ddφt^2-4*(dφt/abs(Δp-Δn))
+      discr=ddφt^2-4*(dφt/α)
       if discr<0
-        discr=ddφt^2+4*(dφt/abs(Δp-Δn))
+        discr=ddφt^2+4*(dφt/α)
       end
       if ddφt<0
-        dNp=(-ddφt+sqrt(discr))/(2/abs(Δp-Δn)) #direction de Newton
+        dNp=(-ddφt+sqrt(discr))/(2/α) #direction de Newton
       else
         dNp=-2*dφt/(ddφt+sqrt(discr))
       end
-      dNn=(-ddφt-sqrt(discr))/(2/abs(Δp-Δn)) #direction de Newton
+      dNn=(-ddφt-sqrt(discr))/(2/α) #direction de Newton
 
       if q(dNp)<q(dNn)
         d=dNp
@@ -90,9 +89,8 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
         ratio = ared / pred
 
         if ratio < eps1  # Unsuccessful
-            Δp = red*Δp
-            Δn = red*Δn
-            verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
+            α=red*α
+            verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,α,t+d,φtestTR);
         else             # Successful
             t = t + d
 
@@ -103,14 +101,11 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
 
             #verbose && println("\n dS=",dS," y=",y," s=",s)
             if ratio > eps2
-                Δp = aug * Δp
-                Δn = min(-t, aug * Δn)
-            else
-                Δn = min(-t, Δn)
+            α=aug*α
             end
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
-            verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
+            verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,t,φt,dφt,α);
         end;
 
         iter=iter+1
