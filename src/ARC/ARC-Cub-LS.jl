@@ -3,6 +3,11 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
+                   eps1 = 0.1,
+                   eps2 = 0.7,
+                   red = 0.15,
+                   aug = 10,
+                   α=1.0,
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
                    maxiter :: Int64=50,
@@ -17,11 +22,6 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
 
     # Specialized TR for handling non-negativity constraint on t
     # Trust region parameters
-    eps1 = 0.1
-    eps2 = 0.7
-    red = 0.15
-    aug = 10
-    α=1.0
 
     iter = 0
     t=0.0

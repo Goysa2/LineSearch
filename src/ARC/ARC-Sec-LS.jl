@@ -3,9 +3,14 @@ function ARC_Sec_ls(h :: AbstractLineFunction,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
+                   eps1 = 0.1,
+                   eps2 = 0.7,
+                   red = 0.15,
+                   aug = 10,
+                   α=1.0,
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   maxiter :: Int64=100,
+                   maxiter :: Int64=50,
                    verbose :: Bool=false)
 
     t = 1.0
@@ -17,11 +22,7 @@ function ARC_Sec_ls(h :: AbstractLineFunction,
 
     # Specialized TR for handling non-negativity constraint on t
     # Trust region parameters
-    eps1 = 0.1
-    eps2 = 0.7
-    red = 0.15
-    aug = 10
-    α=0.5
+    
     iter = 0
     seck = 1.0 #(gt-g₀)
     t=0.0
