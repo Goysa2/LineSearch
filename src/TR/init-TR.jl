@@ -27,17 +27,12 @@ else
   t=0.0
 end
 
-
-
 # Specialized TR for handling non-negativity constraint on t
 # Trust region parameters
-eps1 = 0.1
-eps2 = 0.7
-red = 0.15
-aug = 10
+
 ɛa = (τ₁-τ₀)*g₀
 ɛb = -(τ₁+τ₀)*g₀
 
-return (t,ht,gt,false,Δp,Δn,eps1,eps2,red,aug,ɛa,ɛb)
+return (t,ht,gt,false,Δp,Δn,ɛa,ɛb)
 
 end

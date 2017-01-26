@@ -4,11 +4,15 @@ function TR_Cub_ls(h :: AbstractLineFunction,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
+                   eps1 :: Float64 = 0.1,
+                   eps2 :: Float64 = 0.7,
+                   red :: Float64 = 0.15,
+                   aug :: Float64= 10.0,
                    τ₁ :: Float64=0.9999,
                    maxiter :: Int64=50,
                    verbose :: Bool=false)
 
-    (t,ht,gt,A_W,Δp,Δn,eps1,eps2,red,aug,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
+    (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
       return (t,true,ht,0.0,0.0)
@@ -20,7 +24,7 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
     A=0.5
     B=0.0
-    
+
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
