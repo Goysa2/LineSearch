@@ -6,6 +6,7 @@ using NLPModels
 using Optimize
 using Roots
 using ScalarOptimizationProblems
+using ScalarSolvers
 
 include("includes.jl")
 

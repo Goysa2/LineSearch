@@ -13,11 +13,9 @@ function ARC_SecA_ls(h :: AbstractLineFunction,
                    maxiter :: Int64=50,
                    verbose :: Bool=false)
 
-    t = 1.0
-    ht = obj(h,t)
-    gt = grad!(h, t, g)
-    if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t, true, ht, 0, 0)
+    (t,ht,gt,A_W,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
+    if A_W
+      return (t,true,ht,0.0,0.0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -30,12 +28,10 @@ function ARC_SecA_ls(h :: AbstractLineFunction,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
-    # le reste de l'algo minimise la fonction φ...
-    # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    φt = 0.0          # on sait que φ(0)=0
+    φt = φ(t)
 
-    dφt = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
-    # Version avec la sécante: modèle quadratique
+    dφt = dφ(t)
+
     q(d)=φt + dφt*d + 0.5*seck*d^2
 
     # test d'arrêt sur dφ
@@ -56,8 +52,11 @@ function ARC_SecA_ls(h :: AbstractLineFunction,
           discr=seck^2+4*(dφt/α)
         end
 
-        dNp=(-seck+sqrt(discr))/(2/α)
-        dNp=-2*dφt/(seck+sqrt(discr))
+        if seck<0
+          dNp=(-seck+sqrt(discr))/(2/α)
+        else
+          dNp=-2*dφt/(seck+sqrt(discr))
+        end         
 
         dNn=(-seck-sqrt(discr))/(2/α)
 

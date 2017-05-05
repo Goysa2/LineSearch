@@ -42,33 +42,17 @@ function TR_SecA_ls(h :: AbstractLineFunction,
 
         dS = -dφt/seck; # point stationnaire de q(d)
 
-        if (q(Δp)<q(Δn)) | (Δn==0.0)
-            d=Δp
-        else
-            d=Δn
-        end
-
-        if  (dS < Δp) & (dS > Δn) & (q(d)>q(dS))
-            d=dS
-        end
+        d=TR_ls_step_computation(ddφt,dφt,dS,Δn,Δp)
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
         # test d'arrêt sur dφ
 
-        pred = dφt*d + 0.5*seck*d^2
-        #assert(pred<0)   # How to recover? As is, it seems to work...
-        if pred >-1e-10
-          ared=(dφt+dφtestTR)*d/2
-        else
-          ared=φtestTR-φt
-        end
+        (pred,ared,ratio)=pred_ared_computation(dφt,φt,ddφt,d,φtestTR,dφtestTR)
 
         tprec = t
         φtprec = φt
         dφtprec = dφt;
-
-        ratio = ared / pred; # inclure ici le truc numérique de H & Z
 
         if ratio < eps1  # Unsuccessful
             Δp = red*Δp

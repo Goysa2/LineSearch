@@ -3,29 +3,28 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
-                   eps1 = 0.1,
-                   eps2 = 0.7,
-                   red = 0.15,
-                   aug = 10,
-                   α=1.0,
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
                    maxiter :: Int64=50,
                    verbose :: Bool=false)
 
-    t = 1.0
-    ht = obj(h,t)
-    gt = grad!(h, t, g)
-    if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t, true, ht, 0, 0)
+    (t,ht,gt,A_W,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
+    
+    if A_W
+      return (t,true,ht,0.0,0.0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
     # Trust region parameters
+    eps1 = 0.1
+    eps2 = 0.7
+    red = 0.15
+    aug = 10
+    α=1.0
 
     iter = 0
-    t=0.0
-    gt=grad(h,t)
+    #t=0.0
+    #gt=grad(h,t)
     dN=-gt #pour la premiere iteration
 
     A=0.5
@@ -43,8 +42,8 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
     q(d)=φt + dφt*d + A*d^2 + B*d^3
 
     # test d'arrêt sur dφ
-    ɛa = (τ₁-τ₀)*g₀
-    ɛb = -(τ₁+τ₀)*g₀
+    #ɛa = (τ₁-τ₀)*g₀
+    #ɛb = -(τ₁+τ₀)*g₀
 
     verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false

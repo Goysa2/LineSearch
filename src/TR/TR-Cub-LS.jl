@@ -74,18 +74,7 @@ function TR_Cub_ls(h :: AbstractLineFunction,
         dφtestTR= dφ(t+d)
         # test d'arrêt sur dφ
 
-        #pred = dφt*d + 0.5*seck*d^2
-        pred = dφt*d + A*d^2 + B*d^3
-        #assert(pred<0)   # How to recover? As is, it seems to work...
-        if pred >-1e-10
-          ared=(dφt+dφtestTR)*d/2
-        else
-          ared=φtestTR-φt
-        end
-
-        tprec = t;
-        φtprec=φt
-        dφtprec = dφt;
+        (pred,ared,ratio)=pred_ared_computation(dφt,φt,ddφt,d,φtestTR,dφtestTR)
         ratio = ared / pred
 
         if ratio < eps1  # Unsuccessful

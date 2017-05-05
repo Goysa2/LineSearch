@@ -15,27 +15,23 @@ function ARC_Nwt_ls(h :: AbstractLineFunction,
 
     #println("on est dans ARC_Nwt_ls")
 
-    t = 1.0
-    ht = obj(h,t)
-    gt = grad!(h, t, g)
-    if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t,true, ht, 0,0)
+    (t,ht,gt,A_W,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
+    if A_W
+      return (t,true,ht,0.0,0.0)
     end
 
     # Specialized TR for handling non-negativity constraint on t
     # Trust region parameters
 
     iter = 0
-    t=0.0
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
     ddφ(t) = hess(h,t)
-    # le reste de l'algo minimise la fonction φ...
-    # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    φt = 0.0          # on sait que φ(0)=0
 
-    dφt = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
+    φt = φ(t)
+
+    dφt = dφ(t)
     # Version avec la sécante: modèle quadratique
     ddφt = ddφ(0.0)
 

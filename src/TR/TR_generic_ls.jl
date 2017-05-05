@@ -1,17 +1,18 @@
-export TR_Nwt_ls
-function TR_Nwt_ls(h :: AbstractLineFunction,
-                   h₀ :: Float64,
-                   g₀ :: Float64,
-                   g :: Array{Float64,1};
-                   τ₀ :: Float64=1.0e-4,
-                   eps1 :: Float64 = 0.1,
-                   eps2 :: Float64 = 0.7,
-                   red :: Float64 = 0.15,
-                   aug :: Float64= 10.0,
-                   τ₁ :: Float64=0.9999,
-                   maxiter :: Int64=50,
-                   verbose :: Bool=false,
-                   kwargs...)
+export TR_generic_ls
+function TR_generic_ls(h :: AbstractLineFunction,
+                       h₀ :: Float64,
+                       g₀ :: Float64,
+                       g :: Array{Float64,1};
+                       τ₀ :: Float64=1.0e-4,
+                       eps1 :: Float64 = 0.1,
+                       eps2 :: Float64 = 0.7,
+                       red :: Float64 = 0.15,
+                       aug :: Float64= 10.0,
+                       τ₁ :: Float64=0.9999,
+                       maxiter :: Int64=50,
+                       verbose :: Bool=false,
+                       direction :: String="Nwt",
+                       kwargs...)
 
     t = 1.0
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
@@ -20,7 +21,9 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
       return (t,true,ht,0.0,0.0)
     end
 
-    kt=hess(h,t)
+    if direction=="Nwt"
+      kt=hess(h,t)
+    end
 
     iter = 0
     seck = 1.0 #(gt-g₀)
@@ -34,9 +37,15 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
 
     dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
 
-    ddφt = hess(h,t)
-    # Version avec la sécante: modèle quadratique
-    q(d) = φt + dφt*d + 0.5*ddφt*d^2
+    if direction=="Nwt"
+      ddφt = hess(h,t)
+    end
+
+    if direction=="Nwt"
+      q(d) = φt + dφt*d + 0.5*ddφt*d^2
+    elseif direction=="Sec" || direction=="SecA"
+      q(d)=φt + dφt*d + 0.5*seck*d^2
+    end
 
     admissible = false
     tired=iter > maxiter
@@ -45,7 +54,11 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
-        dN = -dφt/ddφt; # point stationnaire de q(d)
+        if direction=="Nwt"
+          dN = -dφt/ddφt; # point stationnaire de q(d)
+        elseif direction=="Sec" || direction=="SecA"
+          dN = -dφt/seck
+        end
 
         d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
 
@@ -65,11 +78,9 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
             Δn = red*Δn
             verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
         else             # Successful
-            t = t + d
-
-            φt = φtestTR
-            dφt = dφ(t)
-            ddφt = hess(h,t)
+            if direction=="Nwt"
+              (t,φt,dφt,ddφt)=Nwt_computation_ls(t,d,φtestTR,h,dφ)
+            end
 
             if ratio > eps2
                 Δp = aug * Δp

@@ -1,5 +1,7 @@
 include("Armijo.jl")
 include("Wolfe.jl")
+include("../Nwt_computation_ls.jl")
+
 
 include("ARC/ARC-Cub-LS.jl")
 include("ARC/ARC-Nwt-LS.jl")
@@ -18,6 +20,10 @@ include("TR/TR-Nwt-LS.jl")
 include("TR/TR-Sec-LS.jl")
 include("TR/TR-SecA-LS.jl")
 include("TR/init-TR.jl")
+include("TR/TR_generic_ls.jl")
+
+include("TR/TR-ls-step-computation.jl")
+
 
 include("zoom/trouve-intervalleA-ls.jl")
 include("zoom/zoom-ls.jl")
