@@ -25,6 +25,10 @@ function TR_generic_ls(h :: AbstractLineFunction,
       kt=hess(h,t)
     end
 
+    if direction=="Sec"
+      println(":)")
+    end
+
     iter = 0
     seck = 1.0 #(gt-g₀)
 
