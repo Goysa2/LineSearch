@@ -14,6 +14,8 @@ function TR_generic_ls(h :: AbstractLineFunction,
                        direction :: String="Nwt",
                        kwargs...)
 
+    #println("on est dans TR_generic_ls direction:",direction )
+
     t = 1.0
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
@@ -21,16 +23,7 @@ function TR_generic_ls(h :: AbstractLineFunction,
       return (t,true,ht,0.0,0.0)
     end
 
-    if direction=="Nwt"
-      kt=hess(h,t)
-    end
-
-    if direction=="Sec"
-      println(":)")
-    end
-
     iter = 0
-    #seck = 1.0 #(gt-g₀)
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
@@ -45,12 +38,14 @@ function TR_generic_ls(h :: AbstractLineFunction,
       ddφt = hess(h,t)
     elseif direction=="Sec" || direction=="SecA"
       seck=1.0
+      #println("on a seck")
     end
 
     if direction=="Nwt"
       q(d) = φt + dφt*d + 0.5*ddφt*d^2
     elseif direction=="Sec" || direction=="SecA"
       q(d)=φt + dφt*d + 0.5*seck*d^2
+      #println("on a q(d)")
     end
 
     admissible = false
@@ -66,18 +61,31 @@ function TR_generic_ls(h :: AbstractLineFunction,
         elseif direction=="Sec" || direction=="SecA"
           dN = -dφt/seck
           d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
+          #println("on a la direction d")
         end
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
         # test d'arrêt sur dφ
 
-        tprec = t
-        # φtprec = φt
-        # dφtprec = dφt
-        # ddφtprec = ddφt
+        if direction=="Sec"
+          tprec = t
+          #φtprec = φt
+          dφtprec = dφt
+          # ddφtprec = ddφt
+          #println("on a tprec et dφtprec")
+        elseif direction=="SecA"
+          tprec = t
+          φtprec = φt
+          dφtprec = dφt
+        end
 
-        (pred,ared,ratio)=pred_ared_computation(dφt,φt,ddφt,d,φtestTR,dφtestTR)
+
+        if direction=="Nwt"
+          (pred,ared,ratio)=pred_ared_computation(dφt,φt,ddφt,d,φtestTR,dφtestTR)
+        elseif direction=="Sec"
+          (pred,ared,ratio)=pred_ared_computation(dφt,φt,seck,d,φtestTR,dφtestTR)
+        end
 
         if ratio < eps1  # Unsuccessful
             Δp = red*Δp
@@ -86,9 +94,13 @@ function TR_generic_ls(h :: AbstractLineFunction,
         else             # Successful
             if direction=="Nwt"
               (t,φt,dφt,ddφt)=Nwt_computation_ls(t,d,φtestTR,h,dφ)
-            elseif direction=="Sec" || direction=="SecA"
-              print(":)")
+            elseif direction=="Sec"
+              (t,φt,dφt,s,y,seck)=Sec_computation_ls(t,tprec, dφtprec, dφ, d, φtestTR)
+              #println("on a les paramètres de la sécante")
+            elseif direction=="SecA"
+              (t,φt,dφt,s,y,seck)=SecA_computation_ls(t, tprec, φtprec, dφtprec,dφ, d, φtestTR)
             end
+
 
             if ratio > eps2
                 Δp = aug * Δp
