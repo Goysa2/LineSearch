@@ -30,7 +30,7 @@ function TR_generic_ls(h :: AbstractLineFunction,
     end
 
     iter = 0
-    seck = 1.0 #(gt-g₀)
+    #seck = 1.0 #(gt-g₀)
 
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
@@ -43,6 +43,8 @@ function TR_generic_ls(h :: AbstractLineFunction,
 
     if direction=="Nwt"
       ddφt = hess(h,t)
+    elseif direction=="Sec" || direction=="SecA"
+      seck=1.0
     end
 
     if direction=="Nwt"
@@ -60,11 +62,11 @@ function TR_generic_ls(h :: AbstractLineFunction,
 
         if direction=="Nwt"
           dN = -dφt/ddφt; # point stationnaire de q(d)
+          d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
         elseif direction=="Sec" || direction=="SecA"
           dN = -dφt/seck
+          d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
         end
-
-        d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
@@ -84,6 +86,8 @@ function TR_generic_ls(h :: AbstractLineFunction,
         else             # Successful
             if direction=="Nwt"
               (t,φt,dφt,ddφt)=Nwt_computation_ls(t,d,φtestTR,h,dφ)
+            elseif direction=="Sec" || direction=="SecA"
+              print(":)")
             end
 
             if ratio > eps2

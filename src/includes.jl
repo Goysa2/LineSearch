@@ -1,7 +1,7 @@
 include("Armijo.jl")
 include("Wolfe.jl")
-include("../Nwt_computation_ls.jl")
-
+include("Nwt_computation_ls.jl")
+include("Sec_computation_ls.jl")
 
 include("ARC/ARC-Cub-LS.jl")
 include("ARC/ARC-Nwt-LS.jl")
