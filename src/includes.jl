@@ -10,6 +10,11 @@ include("ARC/ARC-Nwt-LS.jl")
 include("ARC/ARC-Sec-LS.jl")
 include("ARC/ARC-SecA-LS.jl")
 
+include("ARC/init_ARC.jl")
+include("ARC/ARC_generic_ls.jl")
+
+
+
 include("Bissection/trouve-intervalle-ls.jl")
 include("Bissection/Biss-LS.jl")
 include("Bissection/Biss-Cub-LS.jl")
@@ -21,6 +26,7 @@ include("TR/TR-Cub-LS.jl")
 include("TR/TR-Nwt-LS.jl")
 include("TR/TR-Sec-LS.jl")
 include("TR/TR-SecA-LS.jl")
+
 include("TR/init-TR.jl")
 include("TR/TR_generic_ls.jl")
 

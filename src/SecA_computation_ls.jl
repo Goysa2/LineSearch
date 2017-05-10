@@ -3,13 +3,13 @@ function SecA_computation_ls(t::Float64,
                             tprec :: Float64,
                             φtprec :: Float64,
                             dφtprec :: Float64,
-                            dφ::Function,
                             d::Float64,
-                            φtestTR::Float64)
+                            φtestTR::Float64,
+                            dφtestTR::Float64)
 
   t = t + d
 
-  dφt = dφ(t)
+  dφt = dφtestTR
   φt = φtestTR
 
   s = t-tprec
