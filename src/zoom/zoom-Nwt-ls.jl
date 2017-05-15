@@ -57,7 +57,6 @@ function zoom_nwt_ls(h :: AbstractLineFunction,
       if ((dφti>=ɛa) & (dφti<=ɛb))
         topt=ti
         ht = φti + h₀ + τ₀*ti*g₀
-        #println("on sort pcq admissible???")
         return (topt,false,ht,iter)
       end
 

@@ -39,3 +39,6 @@ include("zoom/zoom-Nwt-ls.jl")
 include("zoom/zoom-Cub-ls.jl")
 include("zoom/zoom-Sec-ls.jl")
 include("zoom/zoom-SecA-ls.jl")
+
+include("zoom/zoom-generic-ls.jl")
+include("zoom_computation.jl")

@@ -10,8 +10,6 @@ function zoom_ls(h :: AbstractLineFunction,
                  maxiter :: Int=50,
                  verbose :: Bool=false)
 
-  #println("ZOOM_LS")
-
   φ(ti) = obj(h,ti) - h₀ - τ₀*ti*g₀  # fonction et
   dφ(ti) = grad(h,ti) - τ₀*g₀    # dérivée
 
@@ -22,8 +20,6 @@ function zoom_ls(h :: AbstractLineFunction,
     tlow=t₁
     thi=t₀
   end
-
-  #println("thi=",thi," tlow=",tlow)
 
   φlow=φ(tlow)
   dφlow=dφ(tlow)
@@ -45,17 +41,14 @@ function zoom_ls(h :: AbstractLineFunction,
   verbose && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   while !(admissible | tired)
-    #φti=φ(ti)
     if (φti>0) | (φti>=φlow)
       thi=ti
       φthi=φti
       dφhi=dφti
     else
-      #dφti=dφ(ti)
       if ((dφti>=ɛa) & (dφti<=ɛb))
         topt=ti
         ht = φti + h₀ + τ₀*ti*g₀
-        #println("on sort de zoom parce que admissible")
         return (topt,false,ht,iter)
       end
 
@@ -73,11 +66,6 @@ function zoom_ls(h :: AbstractLineFunction,
     ti=(tlow+thi)/2
     φti=φ(ti)
     dφti=dφ(ti)
-    #println("ti=",ti)
-    #println("φti=",φti)
-    #println("version calculé φti=",φ(ti))
-    #println("dφti=",dφti)
-    #println("version calculé dφti=",dφ(ti))
     iter+=1
     tired = iter > maxiter
     verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
@@ -87,6 +75,5 @@ function zoom_ls(h :: AbstractLineFunction,
   topt=ti
   ht = φti + h₀ + τ₀*ti*g₀
 
-  #println("on sort de zoom parce que fini")
   return (topt,false,ht,iter)
 end
