@@ -6,11 +6,13 @@
 
 [![codecov.io](http://codecov.io/github/Goysa2/LineSearch.jl/coverage.svg?branch=master)](http://codecov.io/github/Goysa2/LineSearch.jl?branch=master)
 
-##Installing
+## Installing
 `julia> Pkg.clone("https://github.com/Goysa2/LineSearch.git")`
 
-##How to use
+## How to use
 This package is a collection of LineSearch algorithms made to be used with the descent algorithms presented in the [LSDescentMethods](https://github.com/vepiteski/LSDescentMethods) package.
 
-##References
+## References
 J. Nocedal and S.Wright [Numerical Optimization](http://www.bioinfo.org.cn/~wangchao/maa/Numerical_Optimization.pdf)
+
+J.P Dusseault Univariate diffentiable optiization algorithms and LineSearch computation
