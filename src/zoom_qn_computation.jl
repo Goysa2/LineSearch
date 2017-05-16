@@ -11,6 +11,8 @@ function zoom_qn_interpolation(φ::Function,
                             verbose :: Bool=false,
                             kwargs...)
 
+  #Depending on the interpolation we need different informations
+  #The interpolations are presented in more details in: [references]
   if methode=="Nwt"
     ddφti=ddφ(ti)
     dN=-dφti/ddφti
@@ -36,15 +38,16 @@ function zoom_qn_interpolation(φ::Function,
     discr=z^2-dφt*φtm1
     denom=dφt+dφtm1+2*z
     if (discr>0) & (abs(denom)>eps(Float64))
-      #si on peut on utilise l'interpolation cubique
+      #if possible we use cubic step
       w=sqrt(discr)
       dN=-s*(dφt+z+sign(α)*w)/(denom)
-    else #on se rabat sur une étape de sécante
+    else #if not possible we use a secant step
       dN=-dφt*s/y
     end
   end
 
-
+  #We make sure our step stays within a appropriate interval
+  #otherwise we use a simple bissection step
   if ((tp-ti)*dN>0) & (dN/(tp-ti)<γ)
     tplus = ti + dN
     φplus = φ(tplus)
@@ -57,6 +60,7 @@ function zoom_qn_interpolation(φ::Function,
     verbose && println("B")
   end
 
+  #We adjust our current, previous and previous quasi-newton Depending on when ti is located
   if ti>tp
     if dφplus<0
       tp=ti

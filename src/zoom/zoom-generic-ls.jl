@@ -13,18 +13,16 @@ function zoom_generic_ls(h :: AbstractLineFunction,
                  γ :: Float64 = 0.8,
                  kwargs...)
 
-  print_with_color(:yellow,"avant de commencer zoom \n")
-  println(" début zoom nbre éval total=",h.nlp.counters.neval_obj)
-
-  verbose && println("on rentre dans zoom_generic_ls avec direction=",direction)
-
+  #Definition of the φ function as defined in the trouve_intervalleA_ls algorithm
   φ(ti) = obj(h,ti) - h₀ - τ₀*ti*g₀  # fonction et
   dφ(ti) = grad(h,ti) - τ₀*g₀    # dérivée
 
+  #If we are using the Newton Interpolation, the second derivative is needed
   if direction=="Nwt"
     ddφ(t)=hess(h,t)
   end
 
+  #We estabilsh which of the 2 points is tlow and thi
   if φ(t₀)<φ(t₁)
     tlow=t₀
     thi=t₁
@@ -33,19 +31,19 @@ function zoom_generic_ls(h :: AbstractLineFunction,
     thi=t₀
   end
 
+  #We evaluate the values of tlow and thi
   φlow=φ(tlow)
   dφlow=dφ(tlow)
   φhi=φ(thi)
   dφhi=dφ(thi)
 
+  #Depending and the Interpolation, different information are needed
+  #Some are probably superfluous, but doesn't affect the number of iterations or function evalutions
+  #The idea is same for all Interpolations: Keep track of the current point ti, the previous point tp and the previous quasi-newton point tqnp
   if direction=="Nwt" || direction=="Sec" || direction=="SecA" || direction=="Cub"
     ti=t₁
     tp=t₀
     tqnp=t₀
-    # φti=φ(ti)
-    # dφti=dφ(ti)
-    # φtm1=dφ(tqnp)
-    # dφtm1=dφ(tqnp)
   else
     ti=(tlow+thi)/2
     φti=φ(ti)
@@ -54,21 +52,26 @@ function zoom_generic_ls(h :: AbstractLineFunction,
 
   iter=0
 
+  #For the same reasons as before, the strong wolfe conditions for φ is (τ₁-τ₀)*h'(0)<= φ'(t)<=-(τ₁+τ₀)*h'(0)
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
 
   verbose && println("ɛa=",ɛa," ɛb=",ɛb)
 
-  #admissible=false
   tired= iter > maxiter
 
   verbose && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   while !(tired)
+    #zoom (3.6) algorithm as presented by Nocedal & Wright
+
+    #Since the Interpolation computes φ(ti) and dφ(ti) we don't need to compute them everytime
+    #The algorithm as presented doesn't compute the 2 values (φ(ti),dφ(ti)) everytime
+    #But both them are needed for the Interpolation (espcially Cubic and Secant)
     if iter <1
       φti=φ(ti)
     end
-    #println("au calcul φti=",φti)
+
     if (φti>0) | (φti>=φlow)
       thi=ti
       φthi=φti
@@ -77,21 +80,14 @@ function zoom_generic_ls(h :: AbstractLineFunction,
       else
         dφhi=dφti
       end
-      #println("au calcul dφti=",dφhi)
     else
       if iter < 1
         dφti=dφ(ti)
       end
-      #println("au calcul dφti=",dφti)
+
       if ((dφti>=ɛa) & (dφti<=ɛb))
-        verbose && println("on arrête pcq bonne condition")
-        verbose && print_with_color(:yellow,"fin de zoom")
-        verbose && println("nbre éval total=",h.nlp.counters.neval_obj+h.nlp.counters.neval_grad+h.nlp.counters.neval_hprod)
-        #break
         topt=ti
         ht = φti + h₀ + τ₀*ti*g₀
-        println(" fin zoom nbre éval function total=",h.nlp.counters.neval_obj)
-        println(" fin zoom nbre itérations=",iter)
         return (topt,false,ht,iter)
       end
 
@@ -106,19 +102,20 @@ function zoom_generic_ls(h :: AbstractLineFunction,
       dφlow=dφti
     end
 
+    #Depending on the previous if/else statement ti always becomes tlow or thi.
+    #So for or interpolation we make sure that the lowest of the 2 points and it's associated values are placed first
+    #Some information are probably superfluous for some Interpolations, but it doesn't affect the performance
     if direction=="Nwt"
-      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,tp,ti,φti,dφti,φtm1,dφtm1,tqnp,direction,γ,verbose=verbose)
+      if tlow<thi
+        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,tlow,thi,φhi,dφhi,φlow,dφlow,tqnp,direction,γ,verbose=verbose)
+      else
+        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,thi,tlow,φlow,dφlow,φhi,dφhi,tqnp,direction,γ,verbose=verbose)
+      end
     elseif direction=="Sec" || direction=="SecA" || direction=="Cub"
       if tlow<thi
-        #println("if avant interpolation eval functions=",h.nlp.counters.neval_obj)
         (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tqnp,direction,γ,verbose=verbose)
-        #println("if après interpolation eval functions=",h.nlp.counters.neval_obj)
-        #println("à la fin de zoom_qn_interpolation φti=",φti," dφti=",dφti)
       else
-        #println("else avant interpolation eval functions=",h.nlp.counters.neval_obj)
         (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,thi,tlow,φlow,dφlow,φhi,dφhi,tqnp,direction,γ,verbose=verbose)
-        #println("else après interpolation eval functions=",h.nlp.counters.neval_obj)
-        #println("à la fin de zoom_qn_interpolation φti=",φti," dφti=",dφti)
       end
     else
       ti=(tlow+thi)/2
@@ -134,9 +131,6 @@ function zoom_generic_ls(h :: AbstractLineFunction,
 
   topt=ti
   ht = φti + h₀ + τ₀*ti*g₀
-
-  verbose && print_with_color(:yellow,"fin de zoom")
-  println(" fin zoom nbre éval funtionc total=",h.nlp.counters.neval_obj)
 
   return (topt,false,ht,iter)
 end
