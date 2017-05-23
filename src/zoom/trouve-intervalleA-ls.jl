@@ -5,7 +5,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                g :: Array{Float64,1};
                                direction :: String="Nwt",
                                τ₀ :: Float64=1.0e-4,
-                               τ₁ :: Float64=0.9999,
+                               τ₁ :: Float64=0.9,
                                t₀ :: Float64=0.0,
                                tmax :: Float64=1000.0,
                                maxiter :: Int=50,
@@ -13,22 +13,21 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                kwargs...)
 
     #Before starting the algorithm we vcheck to see if a step of 1.0 satisfies both the Wolfe and the Armijo condition
-    t=1.0
-    ht = obj(h,t)
-    gt = grad!(h, t, g)
-    if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (t,true,ht,0,0)
+    ti=1.0
+    ht = obj(h,ti)
+    gt = grad!(h, ti, g)
+    if Armijo(ti,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
+        return (ti,true,ht,0,0)
     end
 
     #We redefine our h function into the φ function.
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
-
     tim1=t₀
     #ti=(tim1+tmax)/2
     ti=1.0
-    iter=0
+    iter=1
 
     #By the definition of φ we know it's value for t=0.0
     φtim1=0.0            #t₀=0.0 => φ(0)=0.0
@@ -47,9 +46,11 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, tim1,dφtim1,φtim1,ti,dφti,φti)
 
     while (iter<maxiter) & (ti<=tmax)
-      #Implementation of the 3.5 Linesearch ALgorithm as presented by Nocedal & Wright 
+      #Implementation of the 3.5 Linesearch ALgorithm as presented by Nocedal & Wright
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (iter>1))
+        #println("on rentre dans zoom_generic_ls 1")
+        #println("(tim1,ti,h₀,g₀)=",(tim1,ti,h₀,g₀))
         (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,direction=direction,verbose=verbose)
         return (topt,good_grad,ht,iter,0)
       end
@@ -63,6 +64,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
       end
 
       if (dφti>= -t₀*h₀)
+        #println("on rentre dans zoom_generic_ls 2")
         (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,direction=direction,verbose=verbose)
         return (topt,good_grad,ht,iter,0)
       end

@@ -5,9 +5,9 @@ function zoom_generic_ls(h :: AbstractLineFunction,
                  t₀ :: Float64,
                  t₁ :: Float64;
                  τ₀ :: Float64=1.0e-4,
-                 τ₁ :: Float64=0.9999,
+                 τ₁ :: Float64=0.9,
                  ϵ :: Float64=1e-5,
-                 maxiter :: Int=50,
+                 maxiter :: Int=10,
                  verbose :: Bool=false,
                  direction :: String="Nwt",
                  γ :: Float64 = 0.8,
@@ -44,6 +44,8 @@ function zoom_generic_ls(h :: AbstractLineFunction,
     ti=t₁
     tp=t₀
     tqnp=t₀
+    φti=NaN
+    dφti=NaN
   else
     ti=(tlow+thi)/2
     φti=φ(ti)
@@ -56,7 +58,7 @@ function zoom_generic_ls(h :: AbstractLineFunction,
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
 
-  verbose && println("ɛa=",ɛa," ɛb=",ɛb)
+  #verbose && println("ɛa=",ɛa," ɛb=",ɛb)
 
   tired= iter > maxiter
 

@@ -42,3 +42,5 @@ include("zoom/zoom-SecA-ls.jl")
 
 include("zoom/zoom-generic-ls.jl")
 include("zoom_computation.jl")
+
+include("Other-LS/strongwolfe2.jl")
