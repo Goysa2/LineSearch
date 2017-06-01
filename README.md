@@ -15,4 +15,4 @@ This package is a collection of LineSearch algorithms made to be used with the d
 ## References
 J. Nocedal and S.Wright [Numerical Optimization](http://www.bioinfo.org.cn/~wangchao/maa/Numerical_Optimization.pdf)
 
-J.P Dusseault Univariate diffentiable optiization algorithms and LineSearch computation
+J.P Dusseault Univariate diffentiable optimization algorithms and LineSearch computation
