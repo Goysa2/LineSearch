@@ -14,6 +14,8 @@ function zoom_qn_interpolation(φ::Function,
                             verbose :: Bool=false,
                             kwargs...)
 
+  #print_with_color(:yellow,"on est dans zoom_qn_interpolation")
+
   if methode=="Nwt"
     ddφti=ddφ(ti)
     dN=-dφti/ddφti
@@ -46,7 +48,6 @@ function zoom_qn_interpolation(φ::Function,
       dN=-dφti*s/y
     end
   end
-
 
   if ((tp-ti)*dN>0) & (dN/(tp-ti)<γ)
     tplus = ti + dN

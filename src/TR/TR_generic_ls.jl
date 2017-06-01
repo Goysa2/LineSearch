@@ -18,7 +18,7 @@ function TR_generic_ls(h :: AbstractLineFunction,
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
-      return (t,true,ht,0.0,0.0)
+      return (t,true,ht,0.0,0.0,false)
     end
 
     iter = 0
@@ -108,9 +108,12 @@ function TR_generic_ls(h :: AbstractLineFunction,
         tired=iter>maxiter
     end;
 
+    # println("tired=",tired)
+
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
+    # println("(t,true, ht, iter, 0, tired)=",(t,true, ht, iter, 0, tired))
 
-    return (t,true, ht, iter,0)  #pourquoi le true et le 0?
+    return (t,true, ht, iter, 0, tired)  #pourquoi le true et le 0?
 
 end

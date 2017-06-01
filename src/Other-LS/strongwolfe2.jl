@@ -6,88 +6,85 @@ export strongwolfe2,zoom2,interpolate2
 # satisfies the (strong) Wolfe conditions.
 # See Nocedal and Wright - Algorithms 3.5 and 3.6
 
-function strongwolfe2(df :: AbstractLineFunction,
-                      #x::Vector,
-                      h₀ :: Float64,
-                      g₀ :: Float64,
-                      g :: Array{Float64,1};
-                      # p::Vector,                  #équivalent de d donc ce linesearch à besoin de d à un certain point
-                      # x_new::Vector,
-                      # gr_new::Vector,
-                      # lsr::LineSearchResults{T},
-                      # alpha0::Real,
-                      # mayterminate::Bool;
+function strongwolfe2(df::AbstractLineFunction,
+                      x::Vector,
+                      p::Vector,
+                      x_new::Vector,
+                      gr_new::Vector,
+                      lsr::Array{Float64,1},
+                      alpha0::Real,
+                      mayterminate::Bool;
                       c1::Real = 1e-4,
                       c2::Real = 0.9,
                       rho::Real = 2.0,
                       kwargs...)
 
-    println("à l'entrée de strongwolfe2 #f=",df.nlp.counters.neval_obj," #g=",df.nlp.counters.neval_grad)
+    # println(" ")
+    # println("c1=",c1," c2=",c2)
+    # println("on est dans strongwolfe2 ")
+    # println("typeof(df)=",typeof(df))
+    # println("x=",x)
+    # println("size(x)=",size(x))
+    # println("p=",p)
+    # println("size(p)=",size(p))
+    # println("mayterminate=",mayterminate)
+    # println("x_new=",x_new)
+    # print("size(x_new)=",size(x_new),"\n")
+    # println("gr_new=",gr_new)
+    # print("size(gr_new)=",size(gr_new),"\n")
+    # println("lsr=",lsr)
     # TODO: do we need gr_new anymore?
     # Any call to gradient! or value_gradient! would update df.g anyway
-    # println("on est dans strongwolfe2")
 
     # Parameter space
-    # n'est pas nécessaire, car on update x à l'extérieur du linesearch
-    #n = length(x)
+    n = length(x)
+    x_return = Array{Float64,1}(n)
+    for i=1:n
+      x_return[i] = x[i]
+    end
 
     # Step-sizes
     a_0 = 0.0
     a_iminus1 = a_0
-    # a_i = alpha0
-    a_i = 1.0 # il semble que alpha0 soit systématiquement 1.0...
+    a_i = alpha0
     a_max = 65536.0
 
     # phi(alpha) = df.f(x + alpha * p)
-    # phi_0 = lsr.value[end]
-    # on utilise pas lsr... je ne comprend pas à quoi ça sert...
-    # comme on a h₀ on a directement phi_0
-    phi_0 = h₀
+    phi_0 = lsr[1]
     phi_a_iminus1 = phi_0
     phi_a_i = NaN
 
     # phi'(alpha) = vecdot(g(x + alpha * p), p)
-    # phiprime_0 = lsr.slope[end]
-    # même principe on peut directement utilisé g₀
-    phiprime_0 = g₀
+    phiprime_0 = lsr[2]
+    # phiprime_0 = g₀
     phiprime_a_i = NaN
 
     # Iteration counter
     i = 1
 
-    # println("a_0=",a_0," a_iminus1=",a_iminus1," a_i=",a_i," a_max=",a_max)
-    # println("phi_0=",phi_0," phi_a_iminus1=",phi_a_iminus1," phi_a_i=",phi_a_i)
-    # println("phiprime_0=",phiprime_0," phiprime_a_i=",phiprime_a_i)
-
-    # println("on a tout les paramètres de strongwolfe2")
-
     while a_i < a_max
-        #println("on est dans le while de strongwolfe2")
         # Update x_new
-        # On update x seulement à l'extérieur du linesearch
         # @simd for index in 1:n
         #     @inbounds x_new[index] = x[index] + a_i * p[index]
         # end
 
-        # Evaluate phi(a_i)
-        # phi_a_i = NLSolversBase.value!(df, x_new)
-        phi_a_i = obj(df,a_i)
+        # println("après update x_new x=",x)
 
-        #println("on a phi_a_i")
+        # Evaluate phi(a_i)
+        phi_a_i = obj(df, a_i)
 
         # Test Wolfe conditions
-        if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) || ( (phi_a_i >= phi_a_iminus1) && (i > 1))
-            # a_star = zoom(a_iminus1, a_i,
-            #               phiprime_0, phi_0,
-            #               df, x, p, x_new, gr_new)
-            # on utilise le zoom qui existe déjà mais avec les paramètres que l'on a déjà
-            #println("on est dans le premier if")
+        if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) ||
+            (phi_a_i >= phi_a_iminus1 && i > 1)
             #println("on rentre dans zoom2 1")
-            #println("(a_iminus1,a_i,phiprime_0,phi_0)=",(a_iminus1,a_i,phi_0,phiprime_0))
-            println("juste avant de rentré dans zomm2 #f=",df.nlp.counters.neval_obj," #g=",df.nlp.counters.neval_grad)
-            a_star = zoom2(a_iminus1, a_i, phiprime_0, phi_0, df)#, gr_new)
-            println("à la sortie de zoom2 #f=",df.nlp.counters.neval_obj," #g=",df.nlp.counters.neval_grad)
-            return (a_star, true, obj(df,a_star), i, 0.0)
+            a_star = zoom2(a_iminus1, a_i,
+                          phiprime_0, phi_0,
+                          df, x, p, x_new, gr_new)
+            x = x_return
+            # println("en sortant de strongwolfe2 x_return=",x_return)
+            # println("en sortant de strongwolfe2 x=",x)
+            # println("en sortant de strongwolfe2 x_new=",x_new)
+            return a_star, false, x_new, i, 0.0
         end
 
         # Evaluate phi'(a_i)
@@ -95,22 +92,28 @@ function strongwolfe2(df :: AbstractLineFunction,
         # gr_new[:] = gradient(df)
         #
         # phiprime_a_i = vecdot(gr_new, p)
-        # on utilise les outils que l'on a déjà pour calculer  φ'(aᵢ)
-        phiprime_a_i = grad(df,a_i)
-        #println("on a phiprime_a_i")
+
+        phiprime_a_i = grad(df, a_i)
+
         # Check condition 2
         if abs(phiprime_a_i) <= -c2 * phiprime_0
-          println("quand on sort de strongwolfe2 sans passer par zoom #f=",df.nlp.counters.neval_obj," #g=",df.nlp.counters.neval_grad)
-          return (a_i,true,obj(df,a_i),i, 0.0)
+            x = x_return
+            #println("on fini strongwolfe2 sans zoom2")
+            # println("en sortant de strongwolfe2 x=",x)
+            # println("en sortant de strongwolfe2 x_new=",x_new)
+            return a_i, false, x_new, i, 0.0
         end
 
         # Check condition 3
         if phiprime_a_i >= 0.0
-            println("juste avant de rentré dans zomm2 #f=",df.nlp.counters.neval_obj," #g=",df.nlp.counters.neval_grad)
-            a_star = zoom2(a_i, a_iminus1, phiprime_0, phi_0, df)#, gr_new)
             #println("on rentre dans zoom2 2")
-            println("à la sortie de zoom2 #f=",df.nlp.counters.neval_obj," #g=",df.nlp.counters.neval_grad)
-            return (a_star, true, obj(df,a_star), i, 0.0)
+            a_star = zoom2(a_i, a_iminus1,
+                          phiprime_0, phi_0,
+                          df, x, p, x_new, gr_new)
+            x = x_return
+            # println("en sortant de strongwolfe2 x=",x)
+            # println("en sortant de strongwolfe2 x_new=",x_new)
+            return a_star, false, x_new, i, 0.0
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
@@ -125,24 +128,29 @@ function strongwolfe2(df :: AbstractLineFunction,
     end
 
     # Quasi-error response
-    #println("on sort de strongwolfe2")
-    return (a_max, false, obj(df,a_max), i, 0.0)
+    x = x_return
+    # println("en sortant de strongwolfe2 x=",x)
+    # println("en sortant de strongwolfe2 x_new=",x_new)
+    return a_max, false, x_new, i, 0.0
 end
 
 function zoom2(a_lo::Real,
-              a_hi::Real,
-              phiprime_0::Real,
-              phi_0::Real,
-              df :: AbstractLineFunction;
-              #p::Vector;
-              #gr_new::Vector;
-              c1::Real = 1e-4,
-              c2::Real = 0.9)
+               a_hi::Real,
+               phiprime_0::Real,
+               phi_0::Real,
+               df :: C1LineFunction,
+               x::Vector,
+               p::Vector,
+               x_new::Vector,
+               gr_new::Vector;
+               c1::Real = 1e-4,
+               c2::Real = 0.9,
+               kwargs...)
 
-    # println("on est dans zoom2")
+    #println("on est dans zoom2")
+    #println("a_lo=",a_lo," a_hi=",a_hi)
     # Parameter space
-    # pour les mêmes raisons que dans strongwolfe on utilise pas n
-    # n = length(x)
+    n = length(x)
 
     # Step-size
     a_j = NaN
@@ -156,33 +164,24 @@ function zoom2(a_lo::Real,
         iteration += 1
 
         # Cache phi_a_lo
-        # étant donné qu'on update pas x dans le linesearch
-        # on a pas besoin de x_new
         # @simd for index in 1:n
         #     @inbounds x_new[index] = x[index] + a_lo * p[index]
         # end
-
         # phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
+        phi_a_lo = obj(df, a_lo)
         # gr_new[:] = NLSolversBase.gradient(df)
         # phiprime_a_lo = vecdot(gr_new, p)
-        # on utilise nos outils pour calculer le gradient de a_lo
-        phi_a_lo = obj(df,a_lo)
         phiprime_a_lo = grad(df, a_lo)
-
-
         # Cache phi_a_hi
-        # étant donné qu'on update pas x dans le linesearch
-        # on a pas besoin de x_new
         # @simd for index in 1:n
         #     @inbounds x_new[index] = x[index] + a_hi * p[index]
         # end
-
         # phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
+        phi_a_hi = obj(df, a_hi)
         # gr_new[:] = NLSolversBase.gradient(df)
         # phiprime_a_hi = vecdot(gr_new, p)
-        # on utilise nos outils pour calculer le grandient de a_hi
-        phi_a_hi = obj(df,a_hi)
-        phiprime_a_hi = grad(df,a_hi)
+
+        phiprime_a_hi = grad(df, a_hi)
 
         # Interpolate a_j
         if a_lo < a_hi
@@ -196,30 +195,29 @@ function zoom2(a_lo::Real,
                               phiprime_a_hi, phiprime_a_lo)
         end
 
+        # println("iteration=",iteration," a_j=",a_j)
+
         # Update x_new
-        # on utilise pas x dans nos trucs
         # @simd for index in 1:n
         #     @inbounds x_new[index] = x[index] + a_j * p[index]
         # end
 
         # Evaluate phi(a_j)
         # phi_a_j = NLSolversBase.value!(df, x_new)
-        # on le calcul avec nos outils
-        phi_a_j = obj(df,a_j)
+        phi_a_j = obj(df, a_j)
 
         # Check Armijo
-        if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||(phi_a_j > phi_a_lo)
+        if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||
+            (phi_a_j > phi_a_lo)
             a_hi = a_j
         else
             # Evaluate phiprime(a_j)
             # NLSolversBase.gradient!(df, x_new)
             # gr_new[:] = gradient(df)
             # phiprime_a_j = vecdot(gr_new, p)
-            # on utilise nos outils pour calculer le gradient de notre point courant
             phiprime_a_j = grad(df, a_j)
 
             if abs(phiprime_a_j) <= -c2 * phiprime_0
-                # println("on sort de zoom2 i=",iteration)
                 return a_j
             end
 
@@ -231,8 +229,11 @@ function zoom2(a_lo::Real,
         end
     end
 
+    # if a_lo==a_hi
+    #   warn("t_lo==a_hi")
+    # end
+
     # Quasi-error response
-    # println("on sort de zoom2 i=",iteration)
     return a_j
 end
 
@@ -240,16 +241,20 @@ end
 # a_hi = a_{i}
 function interpolate2(a_i1::Real, a_i::Real,
                      phi_a_i1::Real, phi_a_i::Real,
-                     phiprime_a_i1::Real, phiprime_a_i::Real)
+                     phiprime_a_i1::Real, phiprime_a_i::Real,kwargs...)
+    # println("on est dans interpolate2")
+    # println("a_i1=",a_i1," a_i=",a_i)
+    # println("phi_a_i1=",phi_a_i1," phi_a_i=",phi_a_i)
+    # println("phiprime_a_i1=",phiprime_a_i1," phiprime_a_i=",phiprime_a_i)
     d1 = phiprime_a_i1 + phiprime_a_i -
         3.0 * (phi_a_i1 - phi_a_i) / (a_i1 - a_i)
-    #println("sign(d1 * d1 - phiprime_a_i1 * phiprime_a_i)=",sign(d1 * d1 - phiprime_a_i1 * phiprime_a_i))
-    if (d1 * d1 - phiprime_a_i1 * phiprime_a_i)>0
-      d2 = sqrt(d1 * d1 - phiprime_a_i1 * phiprime_a_i)
-      return a_i - (a_i - a_i1) *
-          ((phiprime_a_i + d2 - d1) /
-          ( phiprime_a_i - phiprime_a_i1 + 2.0 * d2))
-    else
-      return a_i + (a_i - a_i1)/(phi_a_i - phi_a_i1)
+    if (d1 * d1 - phiprime_a_i1 * phiprime_a_i) < 0.0
+     warn("Interpolation with a negative square root")
+     return NaN
     end
+    d2 = sqrt(d1 * d1 - phiprime_a_i1 * phiprime_a_i)
+    #println("dN=",- (a_i - a_i1) *((phiprime_a_i + d2 - d1) /(phiprime_a_i - phiprime_a_i1 + 2.0 * d2)))
+    return a_i - (a_i - a_i1) *
+        ((phiprime_a_i + d2 - d1) /
+         (phiprime_a_i - phiprime_a_i1 + 2.0 * d2))
 end

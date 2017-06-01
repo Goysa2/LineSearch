@@ -14,7 +14,7 @@ function TR_SecA_ls(h :: AbstractLineFunction,
                    kwargs...)
 
     #println("on est dans le SecA")
-    (t,true,ht,iter,zero)=TR_generic_ls(h,h₀,g₀,g,direction="SecA")
-    return (t,true, ht, iter,zero)
+    (t,true,ht,iter,zero,stalled)=TR_generic_ls(h,h₀,g₀,g,direction="SecA")
+    return (t,true, ht, iter,zero,stalled)
 
 end

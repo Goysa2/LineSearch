@@ -8,9 +8,12 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                τ₁ :: Float64=0.9,
                                t₀ :: Float64=0.0,
                                tmax :: Float64=1000.0,
-                               maxiter :: Int=50,
+                               maxiter_ls :: Int=50,
                                verbose :: Bool=false,
+                               γ :: Float64=0.8,
                                kwargs...)
+
+    #println(" ")
 
     #Before starting the algorithm we vcheck to see if a step of 1.0 satisfies both the Wolfe and the Armijo condition
     ti=1.0
@@ -45,27 +48,27 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     verbose && @printf("iter tim1        dφtim1        φtim1         ti        dφti        φti\n")
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, tim1,dφtim1,φtim1,ti,dφti,φti)
 
-    while (iter<maxiter) & (ti<=tmax)
+    while (iter<maxiter_ls) & (ti<=tmax)
       #Implementation of the 3.5 Linesearch ALgorithm as presented by Nocedal & Wright
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (iter>1))
-        #println("on rentre dans zoom_generic_ls 1")
-        #println("(tim1,ti,h₀,g₀)=",(tim1,ti,h₀,g₀))
-        (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,direction=direction,verbose=verbose)
+        #print_with_color(:green,"on rentre dans le premier zoom \n")
+        (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,direction=direction, γ=γ, verbose=verbose)
         return (topt,good_grad,ht,iter,0)
       end
 
       dφti=dφ(ti)
 
       if ((dφti>=ɛa) & (dφti<=ɛb))
+        #print_with_color(:green,"on résoud sans rentré dans zoom \n")
         topt=ti
         ht= φti + h₀ + τ₀*ti*g₀
         return (topt,false,ht,iter,0)
       end
 
       if (dφti>= -t₀*h₀)
-        #println("on rentre dans zoom_generic_ls 2")
-        (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,direction=direction,verbose=verbose)
+        #print_with_color(:green,"on rentre dans le deuxième zoom \n")
+        (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,direction=direction, γ=γ, verbose=verbose)
         return (topt,good_grad,ht,iter,0)
       end
 
@@ -83,6 +86,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     end
 
     ht= φti + h₀ + τ₀*ti*g₀
-    return (t,false,ht,iter,0)
+    return (ti,false,ht,iter,0)
 
 end

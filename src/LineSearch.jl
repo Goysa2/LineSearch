@@ -4,7 +4,7 @@ export algo_biss,problem_test,Intervals_probs,zoom_methods
 using JuMP
 using NLPModels
 using Optimize
-using Roots
+using Polynomials
 using ScalarOptimizationProblems
 using ScalarSolvers
 

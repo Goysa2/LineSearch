@@ -13,7 +13,9 @@ function TR_Sec_ls(h :: AbstractLineFunction,
                    verbose :: Bool=false,
                    kwargs...)
 
-    #println("on est dans le linesearch Sec")
-    (t,true,ht,iter,zero)=TR_generic_ls(h,h₀,g₀,g,direction="Sec")
-    return (t,true, ht, iter,zero)  #pourquoi le true et le 0?
+    #print_with_color(:yellow," on rentre dans TR_Sec_ls \n")
+
+    (t,good_grad,ht,iter,zero,stalled)=TR_generic_ls(h,h₀,g₀,g,direction="Sec")
+    return (t,good_grad, ht, iter,zero,stalled)  #pourquoi le true et le 0?
+    #print_with_color(:green," on sort de TR_Sec_ls \n")
 end

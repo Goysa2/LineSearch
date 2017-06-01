@@ -10,12 +10,13 @@ function TR_Cub_ls(h :: AbstractLineFunction,
                    aug :: Float64= 10.0,
                    τ₁ :: Float64=0.9999,
                    maxiter :: Int64=50,
-                   verbose :: Bool=false)
+                   verbose :: Bool=false,
+                   kwargs...)
 
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
-      return (t,true,ht,0.0,0.0)
+      return (t,true,ht,0.0,0.0,false)
     end
 
     iter = 0
@@ -36,7 +37,10 @@ function TR_Cub_ls(h :: AbstractLineFunction,
     # Version avec la sécante: modèle quadratique
     q(d)=φt + dφt*d + A*d^2 + B*d^3
 
-    verbose &&println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
+    s=1.0
+    y=1.0
+
+    verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     tired=iter > maxiter
     verbose && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
@@ -51,10 +55,12 @@ function TR_Cub_ls(h :: AbstractLineFunction,
         end
 
         cub(t)= φt + dφt*t + A*t^2 + B*t^3
-        dcub(t)=dφt + 2*A*t + 3*B*t^2
-        dR=roots(dcub)
+        #dcub(t)=dφt + 2*A*t + 3*B*t^2
+        p=Poly([dφt,2*A,3*B])
 
-        if isreal(dR)
+        dR=roots(p)
+
+        if isreal(dR) & !isempty(dR)
           dR=real(dR)
           dN2=dR[1]
           if length(dR)>1
@@ -70,11 +76,22 @@ function TR_Cub_ls(h :: AbstractLineFunction,
           d=dN2
         end
 
+        if d == 0.0
+          ht = φt + h₀ + τ₀*t*g₀
+          return (t,true, ht, iter+1,0,true)
+        end
+
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
         # test d'arrêt sur dφ
 
-        (pred,ared,ratio)=pred_ared_computation(dφt,φt,ddφt,d,φtestTR,dφtestTR)
+        # (pred,ared,ratio)=pred_ared_computation(dφt,φt,ddφt,d,φtestTR,dφtestTR)
+        pred = dφt*d + A*d^2 + B * d^3;
+        if pred > - 1e-10
+          ared = (dφt + dφtestTR)*d/2
+        else
+          ared = φtestTR-φt;
+        end
         ratio = ared / pred
 
         if ratio < eps1  # Unsuccessful
@@ -82,6 +99,11 @@ function TR_Cub_ls(h :: AbstractLineFunction,
             Δn = red*Δn
             verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
         else             # Successful
+            tprec = t
+            φtprec =φt
+            dφtprec = dφt
+
+
             t = t + d
             dφt = dφtestTR
             φt = φtestTR
@@ -111,6 +133,6 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-    return (t,true, ht, iter,0)   #pourquoi le true et le 0?
+    return (t,true, ht, iter,0,tired)   #pourquoi le true et le 0?
 
 end

@@ -9,7 +9,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
                    verbose :: Bool=false)
 
     (t,ht,gt,A_W,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
-    
+
     if A_W
       return (t,true,ht,0.0,0.0)
     end
@@ -57,7 +57,9 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
         Quad(t) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*α))*t^4
         dQuad(t) = dφt+2*A*t+3*B*t^2+(1/α)*t^3
 
-        dR=roots(dQuad)
+        p=Poly([gₖ,2*A,3*B,(1/α)])
+
+        dR=roots(p)
 
         vmin=Inf
         for i=1:length(dR)
@@ -75,6 +77,12 @@ function ARC_Cub_ls(h :: AbstractLineFunction,
         end
 
         d=dN
+
+        if d==0.0
+          ht = φt + h₀ + τ₀*t*g₀
+          return (t,true, ht, iter+1 , 0, true)
+          #L'OUTIL DE CALCUL DES RACINES DU PACKAGE Polynomials ARRONDIE À 0 CERTAINES RACINES D'OÙ LA NOUVELLE CONDITION
+        end
 
 
         φtestTR = φ(t+d)

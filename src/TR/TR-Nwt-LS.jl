@@ -13,8 +13,8 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
                    verbose :: Bool=false,
                    kwargs...)
 
-    (t,true,ht,iter,zero)=TR_generic_ls(h,h₀,g₀,g,direction="Nwt")
+    (t,true,ht,iter,zero,stalled)=TR_generic_ls(h,h₀,g₀,g,direction="Nwt")
 
-    return (t,true, ht, iter,zero)  #pourquoi le true et le 0?
+    return (t,true, ht, iter,zero,stalled)  #pourquoi le true et le 0?
 
 end
