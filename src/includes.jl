@@ -4,7 +4,6 @@ include("Nwt_computation_ls.jl")
 include("Sec_computation_ls.jl")
 include("SecA_computation_ls.jl")
 
-
 include("ARC/ARC-Cub-LS.jl")
 include("ARC/ARC-Nwt-LS.jl")
 include("ARC/ARC-Sec-LS.jl")
@@ -12,8 +11,6 @@ include("ARC/ARC-SecA-LS.jl")
 
 include("ARC/init_ARC.jl")
 include("ARC/ARC_generic_ls.jl")
-
-
 
 include("Bissection/trouve-intervalle-ls.jl")
 include("Bissection/Biss-LS.jl")
@@ -32,7 +29,6 @@ include("TR/TR_generic_ls.jl")
 
 include("TR/TR-ls-step-computation.jl")
 
-
 include("zoom/trouve-intervalleA-ls.jl")
 include("zoom/zoom-ls.jl")
 include("zoom/zoom-Nwt-ls.jl")
@@ -44,3 +40,4 @@ include("zoom/zoom-generic-ls.jl")
 include("zoom_computation.jl")
 
 include("Other-LS/strongwolfe2.jl")
+include("Other-LS/morethuente2.jl")

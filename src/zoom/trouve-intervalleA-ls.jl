@@ -8,7 +8,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                τ₁ :: Float64=0.9,
                                t₀ :: Float64=0.0,
                                tmax :: Float64=1000.0,
-                               maxiter_ls :: Int=50,
+                               maxiter :: Int=50,
                                verbose :: Bool=false,
                                γ :: Float64=0.8,
                                kwargs...)
@@ -48,7 +48,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     verbose && @printf("iter tim1        dφtim1        φtim1         ti        dφti        φti\n")
     verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, tim1,dφtim1,φtim1,ti,dφti,φti)
 
-    while (iter<maxiter_ls) & (ti<=tmax)
+    while (iter<maxiter) & (ti<=tmax)
       #Implementation of the 3.5 Linesearch ALgorithm as presented by Nocedal & Wright
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (iter>1))

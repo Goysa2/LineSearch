@@ -7,7 +7,7 @@ function zoom_generic_ls(h :: AbstractLineFunction,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9,
                  ϵ :: Float64=1e-5,
-                 maxiter_ls :: Int=50,
+                 maxiter :: Int=50,
                  verbose :: Bool=false,
                  direction :: String="Nwt",
                  γ :: Float64 = 0.8,
@@ -70,7 +70,7 @@ function zoom_generic_ls(h :: AbstractLineFunction,
 
   #verbose && println("ɛa=",ɛa," ɛb=",ɛb)
 
-  tired= iter > maxiter_ls
+  tired= iter > maxiter
 
   verbose && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
