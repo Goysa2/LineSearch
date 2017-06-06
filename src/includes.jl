@@ -41,3 +41,4 @@ include("zoom_computation.jl")
 
 include("Other-LS/strongwolfe2.jl")
 include("Other-LS/morethuente2.jl")
+include("Other-LS/hagerzhang2.jl")

@@ -8,6 +8,8 @@ using Polynomials
 using ScalarOptimizationProblems
 using ScalarSolvers
 
+using LineSearches
+
 include("includes.jl")
 
 include("algorithms.jl")

@@ -1,3 +1,4 @@
+export _morethuente2!, csttep2
 #   Translation of Matlab version by John Myles White
 #   Translation of minpack subroutine cvsrch
 #   Dianne O'Leary   July 1991
@@ -147,29 +148,23 @@
 #                    f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.stpmin,
 #                    stpmax=ls.stpmax, maxfev=ls.maxfev)
 
-function morethuente2(df,
-                      x::Vector,
-                      s::Vector,
-                      x_new::Vector,
-                      lsr::LineSearchResults{T},
-                      stp::Real,
-                      mayterminate::Bool;
-                      n::Integer = length(x),
-                      f_tol::Real = 1e-4,
-                      gtol::Real = 0.9,
-                      x_tol::Real = 1e-8,
-                      stpmin::Real = 1e-16,
-                      stpmax::Real = 65536.0,
-                      maxfev::Integer = 100,
-                      kwargs...)
+T = Float64
 
-    print_with_color(:green, "on est dans MoreThuente \n")
-    println("x=",x)
-    println("s=",s)
-    println("x_new=",x_new)
-    println("lsr=",lsr)
-    println("stp=",stp)
-    println("mayterminate=",mayterminate)
+function _morethuente2!{T}(df::AbstractNLPModel,
+                         x::Vector,
+                         s::Vector,
+                         x_new::Vector,
+                         lsr::LineSearchResults{T},
+                         stp::Real,
+                         mayterminate::Bool;
+                         n::Integer = length(x),
+                         f_tol::Real = 1e-4,
+                         gtol::Real = 0.9,
+                         x_tol::Real = 1e-8,
+                         stpmin::Real = 1e-16,
+                         stpmax::Real = 65536.0,
+                         maxfev::Integer = 100,
+                         kwargs...)
 
     if norm(s) == 0
         Base.error("Step direction is zero.")
@@ -267,17 +262,17 @@ function morethuente2(df,
         end
 
         # f = NLSolversBase.value_gradient!(df, x_new)
+        f = obj(df, x_new)
         # if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's gtol
-        #     return stp, false, x_new, NaN, NaN
+        #     return stp
         # end
-        #Adapted version
-        f = NLSolversBase.value_gradient!(df, x_new)
-        if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's gtol
-            return stp, false, x_new, NaN, NaN
+        if isapprox(norm(grad(df,x_new)), 0) # TODO: this should be tested vs Optim's gtol
+            return stp
         end
 
         nfev += 1 # This includes calls to f() and g!()
-        dg = vecdot(NLSolversBase.gradient(df), s)
+        #dg = vecdot(NLSolversBase.gradient(df), s)
+        dg = vecdot(grad(df,x_new),s)
         push!(lsr, stp, f, dg)
         ftest1 = finit + stp * dgtest
 
@@ -311,7 +306,7 @@ function morethuente2(df,
         #
 
         if info != 0
-            return stp, false, x_new, NaN, NaN
+            return stp
         end
 
         #
@@ -350,7 +345,7 @@ function morethuente2(df,
             stp, fm, dgm,
             bracketed, info_cstep =
                 cstep2(stx, fxm, dgxm, sty, fym, dgym,
-                       stp, fm, dgm, bracketed, stmin, stmax; kwargs...)
+                      stp, fm, dgm, bracketed, stmin, stmax)
             #
             # Reset the function and gradient values for f.
             #
@@ -368,7 +363,7 @@ function morethuente2(df,
             stp, f, dg,
             bracketed, info_cstep =
                 cstep2(stx, fx, dgx, sty, fy, dgy,
-                       stp, f, dg, bracketed, stmin, stmax; kwargs...)
+                      stp, f, dg, bracketed, stmin, stmax)
         end
 
         #
@@ -447,7 +442,7 @@ end # function
 function cstep2(stx::Real, fx::Real, dgx::Real,
                 sty::Real, fy::Real, dgy::Real,
                 stp::Real, f::Real, dg::Real,
-                bracketed::Bool, stpmin::Real, stpmax::Real;kwargs...)
+                bracketed::Bool, stpmin::Real, stpmax::Real)
 
    info = 0
 
