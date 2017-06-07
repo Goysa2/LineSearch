@@ -13,7 +13,7 @@
 This package is a collection of LineSearch algorithms made to be used with the descent algorithms presented in the [LSDescentMethods](https://github.com/vepiteski/LSDescentMethods) package.
 
 ## Other Line Search
-The algorithms presented in Other-LS are interfaced from the LineSearches package.
+The algorithms presented in Other-LS are interfaced from the [LineSearches package](https://github.com/JuliaNLSolvers/LineSearches.jl).
 
 
 ## References
