@@ -34,6 +34,8 @@ function _strongwolfe2!{T}(df::AbstractNLPModel,
                            c2::Real = 0.9,
                            rho::Real = 2.0,
                            kwargs...)
+
+    #print_with_color(:green,"on est dans _strongwolfe2! \n")
     # Parameter space
     n = length(x)
 
@@ -120,7 +122,7 @@ function zoom2(a_lo::Real,
               c1::Real = 1e-4,
               c2::Real = 0.9,
               kwargs...)
-
+    #print_with_color(:yellow,"dans zoom2 \n")
     # Parameter space
     n = length(x)
 
@@ -204,8 +206,12 @@ end
 function interpolate2(a_i1::Real, a_i::Real,
                      phi_a_i1::Real, phi_a_i::Real,
                      phiprime_a_i1::Real, phiprime_a_i::Real;kwargs...)
+    #print_with_color(:cyan,"interpolate2 \n")
     d1 = phiprime_a_i1 + phiprime_a_i -
         3.0 * (phi_a_i1 - phi_a_i) / (a_i1 - a_i)
+    if (d1 * d1 - phiprime_a_i1 * phiprime_a_i) < 0.0
+      return NaN
+    end
     d2 = sqrt(d1 * d1 - phiprime_a_i1 * phiprime_a_i)
     return a_i - (a_i - a_i1) *
         ((phiprime_a_i + d2 - d1) /
