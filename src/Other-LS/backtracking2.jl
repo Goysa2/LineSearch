@@ -23,11 +23,11 @@ export _backtracking2!
 
 T = Float64
 
-function _backtracking2!{T}(df::AbstractNLPModel,
-                            x::Vector{T},
-                            s::Vector,
-                            x_scratch::Vector,
-                            lsr::LineSearchResults;
+function _backtracking2!{T}(h::C1LineFunction2,
+                            f::Real,
+                            slope::Real,
+                            ∇ft::Array{T,1};
+                            lsr::LineSearchResults=LineSearchResults{Float64}([0.0],[f],[slope],0),
                             alpha::Real = 1.0,
                             mayterminate::Bool = false,
                             c1::Real = 1e-4,
@@ -37,6 +37,11 @@ function _backtracking2!{T}(df::AbstractNLPModel,
                             order::Int = 3,
                             maxstep::Real = Inf,
                             kwargs...)
+
+    s = h.d
+    x = copy(h.x)
+    df = h.nlp
+    x_scratch = copy(h.x)
 
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise

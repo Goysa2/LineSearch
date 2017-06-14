@@ -23,17 +23,21 @@ export _strongwolfe2!, zoom2, interpolate2
 
 T = Float64
 
-function _strongwolfe2!{T}(df::AbstractNLPModel,
-                           x::Vector,
-                           p::Vector,
-                           x_new::Vector,
-                           lsr::LineSearchResults{T},
-                           alpha0::Real,
-                           mayterminate::Bool;
+function _strongwolfe2!{T}(h::C1LineFunction2,
+                           f::Real,
+                           slope::Real,
+                           ∇ft::Array{T,1};
+                           lsr::LineSearchResults{T}=LineSearchResults([0.0],[f],[slope],0),
+                           alpha0::Real=1.0,
+                           mayterminate::Bool=false,
                            c1::Real = 1e-4,
                            c2::Real = 0.9,
                            rho::Real = 2.0,
                            kwargs...)
+    df = h.nlp
+    x = copy(h.x)
+    p = copy(h.d)
+    x_new = copy(h.x)
 
     #print_with_color(:green,"on est dans _strongwolfe2! \n")
     # Parameter space

@@ -1,5 +1,5 @@
 export ARC_generic_ls
-function ARC_generic_ls(h :: AbstractLineFunction,
+function ARC_generic_ls(h :: AbstractLineFunction2,
                         h₀ :: Float64,
                         g₀ :: Float64,
                         g :: Array{Float64,1};
@@ -15,11 +15,9 @@ function ARC_generic_ls(h :: AbstractLineFunction,
                         direction :: String="Nwt",
                         kwargs...)
 
-    #println("on est dans ARC_Nwt_ls")
-
     (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
     if A_W
-      return (t,true,ht,0.0,0.0)
+      return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -46,9 +44,6 @@ function ARC_generic_ls(h :: AbstractLineFunction,
       #q(d)=φt + dφt*d + 0.5*seck*d^2
     end
 
-    # test d'arrêt sur dφ
-    # ɛa = (τ₁-τ₀)*g₀
-    # ɛb = -(τ₁+τ₀)*g₀
 
     admissible = false
     tired=iter>maxiter
@@ -113,6 +108,7 @@ function ARC_generic_ls(h :: AbstractLineFunction,
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-    return (t,true, ht, iter,0)  #pourquoi le true et le 0?
+
+    return return (t, true, ht, iter, 0, false, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 
 end

@@ -1,5 +1,5 @@
 export zoom_generic_ls
-function zoom_generic_ls(h :: AbstractLineFunction,
+function zoom_generic_ls(h :: AbstractLineFunction2,
                  h₀ :: Float64,
                  g₀ :: Float64,
                  t₀ :: Float64,

@@ -1,5 +1,5 @@
 export TR_Nwt_ls
-function TR_Nwt_ls(h :: AbstractLineFunction,
+function TR_Nwt_ls(h :: AbstractLineFunction2,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
@@ -13,8 +13,8 @@ function TR_Nwt_ls(h :: AbstractLineFunction,
                    verbose :: Bool=false,
                    kwargs...)
 
-    (t,true,ht,iter,zero,stalled)=TR_generic_ls(h,h₀,g₀,g,direction="Nwt")
+    (t,true,ht,iter,zero,stalled,h_f, h_g, h_h)=TR_generic_ls(h,h₀,g₀,g,direction="Nwt")
 
-    return (t,true, ht, iter,zero,stalled)  #pourquoi le true et le 0?
+    return (t,true, ht, iter,zero,stalled,h_f, h_g, h_h)  #pourquoi le true et le 0?
 
 end

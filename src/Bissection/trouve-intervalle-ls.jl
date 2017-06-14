@@ -1,5 +1,5 @@
 export trouve_intervalle_ls
-function trouve_intervalle_ls(h :: AbstractLineFunction,
+function trouve_intervalle_ls(h :: AbstractLineFunction2,
                               h₀ :: Float64,
                               g₀ :: Float64,
                               g :: Array{Float64,1};
@@ -7,7 +7,8 @@ function trouve_intervalle_ls(h :: AbstractLineFunction,
                               τ₀ :: Float64=1.0e-4,
                               τ₁ :: Float64=0.9999,
                               maxiter :: Int=100,
-                              verbose :: Bool=false)
+                              verbose :: Bool=false,
+                              kwargs...)
 
   #println("verbose=",verbose)
   iter=1

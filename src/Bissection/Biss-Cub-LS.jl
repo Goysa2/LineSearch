@@ -1,5 +1,5 @@
 export Biss_Cub_ls
-function Biss_Cub_ls(h :: AbstractLineFunction,
+function Biss_Cub_ls(h :: AbstractLineFunction2,
                      h₀ :: Float64,
                      g₀ :: Float64,
                      g :: Array{Float64,1};
@@ -7,13 +7,14 @@ function Biss_Cub_ls(h :: AbstractLineFunction,
                      τ₀ :: Float64=1.0e-4,
                      τ₁ :: Float64=0.9999,
                      maxiter :: Int=100,
-                     verbose :: Bool=false)
+                     verbose :: Bool=false,
+                     kwargs...)
 
  t = 1.0
  ht = obj(h,t)
  gt = grad!(h, t, g)
  if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-   return (t, true, ht, 0,0)
+   return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
  end
 
  #println("au début de Biss_Cub_ls g₀=",g₀)
@@ -115,5 +116,5 @@ function Biss_Cub_ls(h :: AbstractLineFunction,
  end
 
  ht = φ(t) + h₀ + τ₀*t*g₀
- return (t,false,ht,iter,0)
+ return (t,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
 end

@@ -1,5 +1,5 @@
 export TR_Cub_ls
-function TR_Cub_ls(h :: AbstractLineFunction,
+function TR_Cub_ls(h :: AbstractLineFunction2,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
@@ -16,7 +16,7 @@ function TR_Cub_ls(h :: AbstractLineFunction,
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
-      return (t,true,ht,0.0,0.0,false)
+      return (t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
     iter = 0
@@ -133,6 +133,6 @@ function TR_Cub_ls(h :: AbstractLineFunction,
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-    return (t,true, ht, iter,0,tired)   #pourquoi le true et le 0?
+    return (t,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)   #pourquoi le true et le 0?
 
 end

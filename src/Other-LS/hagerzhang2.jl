@@ -83,13 +83,12 @@ const DEFAULTSIGMA = 0.9
 T = Float64
 
 
-function _hagerzhang2!{T}(df::AbstractNLPModel,
-                          x::Array{T},
-                          s::Array,
-                          xtmp::Array,
-                          lsr::LineSearchResults{T},
-                          c::Real,
-                          mayterminate::Bool;
+function _hagerzhang2!{T}(h::C1LineFunction2,
+                          f::Real,
+                          slope::Real,
+                          ∇ft::Array{T,1};
+                          mayterminate::Bool=false,
+                          c::Real=1.0,
                           delta::Real = DEFAULTDELTA,
                           sigma::Real = DEFAULTSIGMA,
                           alphamax::Real = convert(T,Inf),
@@ -101,6 +100,12 @@ function _hagerzhang2!{T}(df::AbstractNLPModel,
                           display::Integer = 0,
                           iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
                           kwargs...)
+
+    s = h.d
+    x = copy(h.x)
+    df = h.nlp
+    xtmp = copy(h.x)
+    lsr = LineSearchResults([0.0],[f],[slope],0)
 
     if display & LINESEARCH > 0
         println("New linesearch")

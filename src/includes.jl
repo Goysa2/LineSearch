@@ -1,3 +1,5 @@
+using LSDescentMethods
+
 include("Armijo.jl")
 include("Wolfe.jl")
 include("Nwt_computation_ls.jl")

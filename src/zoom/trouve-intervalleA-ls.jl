@@ -1,5 +1,5 @@
 export trouve_intervalleA_ls
-function trouve_intervalleA_ls(h :: AbstractLineFunction,
+function trouve_intervalleA_ls(h :: AbstractLineFunction2,
                                h₀ :: Float64,
                                g₀ :: Float64,
                                g :: Array{Float64,1};
@@ -13,14 +13,12 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
                                γ :: Float64=0.8,
                                kwargs...)
 
-    #println(" ")
-
     #Before starting the algorithm we vcheck to see if a step of 1.0 satisfies both the Wolfe and the Armijo condition
     ti=1.0
     ht = obj(h,ti)
     gt = grad!(h, ti, g)
     if Armijo(ti,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (ti,true,ht,0,0)
+        return (ti,true,ht,0,0,false, h.f_eval, h.g_eval, h.h_eval)
     end
 
     #We redefine our h function into the φ function.
@@ -54,7 +52,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
       if (φti>0.0) | ((φti>φtim1) & (iter>1))
         #print_with_color(:green,"on rentre dans le premier zoom \n")
         (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,direction=direction, γ=γ, verbose=verbose)
-        return (topt,good_grad,ht,iter,0)
+        return (topt,good_grad,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
       end
 
       dφti=dφ(ti)
@@ -63,13 +61,13 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
         #print_with_color(:green,"on résoud sans rentré dans zoom \n")
         topt=ti
         ht= φti + h₀ + τ₀*ti*g₀
-        return (topt,false,ht,iter,0)
+        return (topt,false,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
       end
 
       if (dφti>= -t₀*h₀)
         #print_with_color(:green,"on rentre dans le deuxième zoom \n")
         (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,direction=direction, γ=γ, verbose=verbose)
-        return (topt,good_grad,ht,iter,0)
+        return (topt,good_grad,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
       end
 
       #The current step t becomes the former step t
@@ -86,6 +84,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction,
     end
 
     ht= φti + h₀ + τ₀*ti*g₀
-    return (ti,false,ht,iter,0)
+    return (ti,false,ht,iter,0,true, h.f_eval, h.g_eval, h.h_eval)
 
 end

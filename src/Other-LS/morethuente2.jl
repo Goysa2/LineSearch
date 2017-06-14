@@ -150,21 +150,25 @@ export _morethuente2!, csttep2
 
 T = Float64
 
-function _morethuente2!{T}(df::AbstractNLPModel,
-                         x::Vector,
-                         s::Vector,
-                         x_new::Vector,
-                         lsr::LineSearchResults{T},
-                         stp::Real,
-                         mayterminate::Bool;
-                         n::Integer = length(x),
-                         f_tol::Real = 1e-4,
-                         gtol::Real = 0.9,
-                         x_tol::Real = 1e-8,
-                         stpmin::Real = 1e-16,
-                         stpmax::Real = 65536.0,
-                         maxfev::Integer = 100,
-                         kwargs...)
+function _morethuente2!{T}(h::C1LineFunction2,
+                           f::Real,
+                           slope::Real,
+                           ∇ft::Array{T,1};
+                           lsr::LineSearchResults{T}=LineSearchResults([0.0],[f],[slope],0),
+                           stp::Real=1.0,
+                           mayterminate::Bool=false,
+                           n::Integer = length(h.x),
+                           f_tol::Real = 1e-4,
+                           gtol::Real = 0.9,
+                           x_tol::Real = 1e-8,
+                           stpmin::Real = 1e-16,
+                           stpmax::Real = 65536.0,
+                           maxfev::Integer = 100,
+                           kwargs...)
+    s = h.d
+    df = h.nlp
+    x_new = copy(h.x)
+    x = copy(h.x)
 
     if norm(s) == 0
         Base.error("Step direction is zero.")

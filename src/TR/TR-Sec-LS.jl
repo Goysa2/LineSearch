@@ -1,5 +1,5 @@
 export TR_Sec_ls
-function TR_Sec_ls(h :: AbstractLineFunction,
+function TR_Sec_ls(h :: AbstractLineFunction2,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
@@ -13,9 +13,7 @@ function TR_Sec_ls(h :: AbstractLineFunction,
                    verbose :: Bool=false,
                    kwargs...)
 
-    #print_with_color(:yellow," on rentre dans TR_Sec_ls \n")
+    (t,good_grad,ht,iter,zero,stalled, h_f, h_g, h_h)=TR_generic_ls(h,h₀,g₀,g,direction="Sec",τ₀=τ₀,τ₁=τ₁)
 
-    (t,good_grad,ht,iter,zero,stalled)=TR_generic_ls(h,h₀,g₀,g,direction="Sec",τ₀=τ₀,τ₁=τ₁)
-    return (t,good_grad, ht, iter,zero,stalled)  #pourquoi le true et le 0?
-    #print_with_color(:green," on sort de TR_Sec_ls \n")
+    return (t,good_grad, ht, iter,zero,stalled, h_f, h_g, h_h)  #pourquoi le true et le 0?
 end
