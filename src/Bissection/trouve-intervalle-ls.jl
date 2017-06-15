@@ -7,10 +7,10 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
                               τ₀ :: Float64=1.0e-4,
                               τ₁ :: Float64=0.9999,
                               maxiter :: Int=100,
-                              verbose :: Bool=false,
+                              verboseLS :: Bool=false,
                               kwargs...)
 
-  #println("verbose=",verbose)
+  #println("verboseLS=",verboseLS)
   iter=1
   t₀=0.0
   inc=inc0
@@ -32,35 +32,12 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
   φt1=φ(t₁)
   dφt1=dφ(t₁)
 
-  # println("t₀=",t₀," t₁=",t₁)
-  # println("φt₀=",φt₀," φt₁=",φt1)
-  # println("version calculé φt₀=",φ(t₀)," φt₁=",φ(t₁))
-  # println("dφt₀=",dφt₀," dφt₁=",dφt1)
-  # println("version calculé dφt₀=",dφ(t₀)," dφt₁=",dφ(t₁))
-
-
-  #println("sd=",sd)
 
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
 
-  # println("dφt1*sd=",dφt1*sd)
-  # if (dφt1*sd<0.0)
-  #   println("(dφt1*sd<0.0)")
-  # end
-  # println(φt1,"<",φt₀)
-  # if (φt1<φt₀)
-  #   println("(φt1<φt₀)")
-  # end
-  # if (iter<maxiter)
-  #   println("(iter<maxiter)")
-  # end
-
- #  println("t₀=",t₀," t₁=",t₁)
- # println("dφt₀=",dφ(t₀)," dφt₁=",dφ(t₁))
-
-  verbose && @printf("iter t        φt        dφt         t1        φt1        dφt1\n")
-  verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
+  verboseLS && @printf("iter t        φt        dφt         t1        φt1        dφt1\n")
+  verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
 
   while (dφt1*sd<0.0) & (φt1<φt₀) & (iter<maxiter)
     #println("on entre ici premier while")
@@ -71,7 +48,7 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
     t₁=t₀+sd*inc
     φt1=φ(t₁)
     dφt1=dφ(t₁)
-    verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
+    verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
     iter=iter+1
 
   end
@@ -96,19 +73,13 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
         dφt1=dφₘ
       end
     end
-      verbose && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
+      verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
     iter=iter+1
   end
 
   ta=min(t₀,t₁)
   tb=max(t₀,t₁)
 
-  # println("après trouve_intervalle_ls \n")
-  # println("ta=",ta," tb=",tb)
-  # println("dφa=",dφ(ta)," dφb=",dφ(tb))
-  # println("iter=",iter)
-
-  #sleep(60)
 
   return (ta,tb)
 

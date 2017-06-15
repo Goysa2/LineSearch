@@ -6,8 +6,11 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
                       τ₀ :: Float64=1.0e-4,
                       τ₁ :: Float64=0.9999,
                       maxiter :: Int=50,
-                      verbose :: Bool=false,
+                      verboseLS :: Bool=false,
+                      check_param :: Bool = false,
                       kwargs...)
+
+    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))                  
 
     t = 1.0
     ht = obj(h,t)
@@ -40,8 +43,8 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
 
     admissible = false
     tired=iter > maxiter
-    verbose && @printf("   iter   tp       tqnp        t        dφt\n");
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
+    verboseLS && @printf("   iter   tp       tqnp        t        dφt\n");
+    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
       s=t-tqnp
@@ -60,12 +63,12 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
         tplus = t + dN
         φplus = obj(h, tplus)
         dφplus= dφ(tplus)
-        verbose && println("N")
+        verboseLS && println("N")
       else
         tplus = (t+tp)/2
         φplus = obj(h, tplus)
         dφplus = dφ(tplus)
-        verbose && println("B")
+        verboseLS && println("B")
       end
 
       if t>tp
@@ -97,7 +100,7 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
       admissible = (dφt>=ɛa) & (dφt<=ɛb)
       tired=iter>maxiter
 
-      verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
+      verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
     end;
 
     #println("après le while \n")

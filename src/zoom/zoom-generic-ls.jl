@@ -1,25 +1,18 @@
 export zoom_generic_ls
 function zoom_generic_ls(h :: AbstractLineFunction2,
-                 h₀ :: Float64,
-                 g₀ :: Float64,
-                 t₀ :: Float64,
-                 t₁ :: Float64;
-                 τ₀ :: Float64=1.0e-4,
-                 τ₁ :: Float64=0.9,
-                 ϵ :: Float64=1e-5,
-                 maxiter :: Int=50,
-                 verbose :: Bool=false,
-                 direction :: String="Nwt",
-                 γ :: Float64 = 0.8,
-                 kwargs...)
+                         h₀ :: Float64,
+                         g₀ :: Float64,
+                         t₀ :: Float64,
+                         t₁ :: Float64;
+                         τ₀ :: Float64=1.0e-4,
+                         τ₁ :: Float64=0.9,
+                         ϵ :: Float64=1e-5,
+                         maxiter_zoom :: Int=50,
+                         verboseLS :: Bool=false,
+                         direction :: String="Nwt",
+                         γ :: Float64 = 0.8,
+                         kwargs...)
 
-  #println(" ")
-
-  # if t₀==t₁
-  #   warn("t₀==t₁")
-  # end
-
-  #println("dans zoom_generic_ls t₀=",t₀," t₁=",t₁)
 
   #Definition of the φ function as defined in the trouve_intervalleA_ls algorithm
   φ(ti) = obj(h,ti) - h₀ - τ₀*ti*g₀  # fonction et
@@ -52,9 +45,9 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
   #The idea is same for all Interpolations: Keep track of the current point ti, the previous point tp and the previous quasi-newton point tqnp
   if direction=="Nwt" || direction=="Sec" || direction=="SecA" || direction=="Cub"
     if tlow<thi
-      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tlow,direction,γ)#,verbose=verbose)
+      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tlow,direction,γ)#,verboseLS=verboseLS)
     else
-      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,thi,tlow,φlow,dφlow,φhi,dφhi,thi,direction,γ)#,verbose=verbose)
+      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,thi,tlow,φlow,dφlow,φhi,dφhi,thi,direction,γ)#,verboseLS=verboseLS)
     end
   else
     ti=(tlow+thi)/2
@@ -68,12 +61,12 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
 
-  #verbose && println("ɛa=",ɛa," ɛb=",ɛb)
+  #verboseLS && println("ɛa=",ɛa," ɛb=",ɛb)
 
-  tired= iter > maxiter
+  tired= iter > maxiter_zoom
 
-  verbose && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
-  verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
+  verboseLS && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
+  verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
   while !(tired)
     #zoom (3.6) algorithm as presented by Nocedal & Wright
 
@@ -124,15 +117,15 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
     #Some information are probably superfluous for some Interpolations, but it doesn't affect the performance
     if direction=="Nwt"
       if tlow<thi
-        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,tlow,thi,φhi,dφhi,φlow,dφlow,tqnp,direction,γ)#,verbose=verbose)
+        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,tlow,thi,φhi,dφhi,φlow,dφlow,tqnp,direction,γ)#,verboseLS=verboseLS)
       else
-        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,thi,tlow,φlow,dφlow,φhi,dφhi,tqnp,direction,γ)#,verbose=verbose)
+        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,ddφ,thi,tlow,φlow,dφlow,φhi,dφhi,tqnp,direction,γ)#,verboseLS=verboseLS)
       end
     elseif direction=="Sec" || direction=="SecA" || direction=="Cub"
       if tlow<thi
-        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tqnp,direction,γ)#,verbose=verbose)
+        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tqnp,direction,γ)#,verboseLS=verboseLS)
       else
-        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,thi,tlow,φlow,dφlow,φhi,dφhi,tqnp,direction,γ)#,verbose=verbose)
+        (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,thi,tlow,φlow,dφlow,φhi,dφhi,tqnp,direction,γ)#,verboseLS=verboseLS)
       end
     else
       ti=(tlow+thi)/2
@@ -141,9 +134,9 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
     end
 
     iter+=1
-    tired = iter >= maxiter
-    verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
-    verbose && println("  ")
+    tired = iter >= maxiter_zoom
+    verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
+    verboseLS && println("  ")
   end
 
   topt=ti

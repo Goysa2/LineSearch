@@ -100,7 +100,6 @@ function _hagerzhang2!{T}(h::C1LineFunction2,
                           display::Integer = 0,
                           iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
                           kwargs...)
-
     s = h.d
     x = copy(h.x)
     df = h.nlp

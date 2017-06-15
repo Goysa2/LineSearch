@@ -6,8 +6,11 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  maxiter :: Int=50,
-                 verbose :: Bool=false,
+                 verboseLS :: Bool=false,
+                 check_param :: Bool = false,
                  kwargs...)
+
+  (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))               
 
   t = 1.0
   ht = obj(h,t)
@@ -41,8 +44,8 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
    admissible=false
    tired =  iter>maxiter
 
-   verbose && @printf(" iter        ta        tb         dφa        dφb        \n")
-   verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
+   verboseLS && @printf(" iter        ta        tb         dφa        dφb        \n")
+   verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
 
    while !(admissible | tired)
 
@@ -53,12 +56,12 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
        tplus = t + dN
        #hplus = obj(h, tplus)
        dφplus= dφ(tplus)
-       verbose && println("N")
+       verboseLS && println("N")
      else
        tplus = (t+tp)/2
        #hplus = obj(h, tplus)
        dφplus = dφ(tplus)
-       verbose && println("B")
+       verboseLS && println("B")
      end
 
      if t>tp
@@ -87,7 +90,7 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
      admissible = (dφt>=ɛa) & (dφt<=ɛb)
      tired =  iter>maxiter
 
-     verbose && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
+     verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
    end
 
    ht = φ(t) + h₀ + τ₀*t*g₀

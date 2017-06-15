@@ -6,8 +6,11 @@ function Biss_ls(h :: AbstractLineFunction2,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
                  maxiter :: Int=50,
-                 verbose :: Bool=false,
+                 verboseLS :: Bool=false,
+                 check_param :: Bool = false,
                  kwargs...)
+
+    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
     t = 1.0
     ht = obj(h,t)
@@ -32,13 +35,11 @@ function Biss_ls(h :: AbstractLineFunction2,
 
     admissible = false
     tired=iter > maxiter
-    verbose && @printf("   iter   ta       tb        tp        φp        dφp\n");
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,ta,tb,tp,φp,dφp);
+    verboseLS && @printf("   iter   ta       tb        tp        dφp\n");
+    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e \n", iter,ta,tb,tp,NaN);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
-      #println("on est dans while \n")
       tp=(ta+tb)/2
-      #println("tp=",tp)
       dφp=dφ(tp)
 
       if dφp<=0
@@ -51,19 +52,11 @@ function Biss_ls(h :: AbstractLineFunction2,
 
       iter=iter+1
       admissible = (dφp>=ɛa) & (dφp<=ɛb)
-      # if admissible==true
-      #   println("on déclare topt")
-      #   topt=tp
-      # end
       tired=iter>maxiter
 
-      verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,ta,tb,tp,φp,dφp);
+      verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,ta,tb,tp,dφp);
     end;
 
-    #println("après le while \n")
-    #println("ta=",ta," tb=",tb)
-
     ht = φ(tp) + h₀ + τ₀*tp*g₀
-    #println("on a ht \n")
     return (tp,false, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 end

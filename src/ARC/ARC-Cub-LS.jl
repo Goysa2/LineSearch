@@ -5,23 +5,23 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
+                   eps1 :: Float64 = 0.1,
+                   eps2 :: Float64 = 0.7,
+                   red :: Float64 = 0.15,
+                   aug :: Float64 = 10.0,
+                   α :: Float64 = 1.0,
                    maxiter :: Int64=50,
                    verbose :: Bool=false,
+                   check_param :: Bool = false,
                    kwargs...)
+
+    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
     (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
       return (t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
     end
-
-    # Specialized TR for handling non-negativity constraint on t
-    # Trust region parameters
-    eps1 = 0.1
-    eps2 = 0.7
-    red = 0.15
-    aug = 10
-    α=1.0
 
     iter = 0
     #t=0.0
@@ -46,14 +46,13 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     #ɛa = (τ₁-τ₀)*g₀
     #ɛb = -(τ₁+τ₀)*g₀
 
-    verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
+    # verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     tired=iter>maxiter
     verbose && @printf("   iter   t       φt        dφt        α        t+d      \n");
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t+d);
+    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
-
         #step computation
         Quad(t) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*α))*t^4
         #dQuad(t) = dφt+2*A*t+3*B*t^2+(1/α)*t^3

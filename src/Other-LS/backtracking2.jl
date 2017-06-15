@@ -80,6 +80,7 @@ function _backtracking2!{T}(h::C1LineFunction2,
         if iteration > iterations
             throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(iterations).",
                                       lsr.alpha[end], lsr))
+            # return NaN
         end
 
         # Shrink proposed step-size:

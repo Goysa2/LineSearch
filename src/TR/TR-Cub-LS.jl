@@ -10,8 +10,11 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
                    aug :: Float64= 10.0,
                    τ₁ :: Float64=0.9999,
                    maxiter :: Int64=50,
-                   verbose :: Bool=false,
+                   verboseLS :: Bool=false,
+                   check_param :: Bool = false,
                    kwargs...)
+
+    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
@@ -40,11 +43,10 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
     s=1.0
     y=1.0
 
-    verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     tired=iter > maxiter
-    verbose && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
+    verboseLS && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
+    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
@@ -97,7 +99,7 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
         if ratio < eps1  # Unsuccessful
             Δp = red*Δp
             Δn = red*Δn
-            verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
+            verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
         else             # Successful
             tprec = t
             φtprec =φt
@@ -125,7 +127,7 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
             end
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
-            verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
+            verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
         end;
         iter+=1
         tired=iter>maxiter

@@ -12,7 +12,10 @@ function TR_generic_ls(h :: AbstractLineFunction2,
                        maxiter :: Int64=50,
                        verbose :: Bool=false,
                        direction :: String="Nwt",
+                       check_param :: Bool = false,
                        kwargs...)
+
+    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
     t = 1.0
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)

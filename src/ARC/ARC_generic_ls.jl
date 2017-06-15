@@ -11,9 +11,14 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
                         τ₀ :: Float64=1.0e-4,
                         τ₁ :: Float64=0.9999,
                         maxiter :: Int64=50,
-                        verbose :: Bool=false,
+                        verboseLS :: Bool=false,
                         direction :: String="Nwt",
+                        check_param :: Bool = false,
                         kwargs...)
+
+    (τ₀ == 1.0e-4) || (check_param && warn("Different parameters"))
+
+    #println("on rentre dans ARC τ₀ = $τ₀ τ₁ = $τ₁")
 
     (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
     if A_W
@@ -47,8 +52,8 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
 
     admissible = false
     tired=iter>maxiter
-    verbose && @printf("   iter   t       φt        dφt        Δ\n");
-    verbose && @printf(" %4d %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ);
+    verboseLS && @printf("   iter   t       φt        dφt        Δ\n");
+    verboseLS && @printf(" %4d %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
@@ -83,7 +88,7 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
 
         if ratio < eps1  # Unsuccessful
             Δ=red*Δ
-            verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,α,t+d,φtestTR);
+            verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t+d,φtestTR);
         else             # Successful
 
             if direction=="Nwt"
@@ -99,7 +104,7 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
             end
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
-            verbose && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,t,φt,dφt,α);
+            verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,t,φt,dφt,Δ);
         end;
 
         iter=iter+1
