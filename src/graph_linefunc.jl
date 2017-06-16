@@ -1,5 +1,15 @@
 export graph_linefunc
-function graph_linefunc(h :: AbstractLineFunction2;
+
+#tool designed to visualize the Armijo and Wolfe condition
+#when given a C1LineFunction or a C2LineFunction
+#Useful for debugging because it can help to visualize in a particular iteration
+#But costs a lot of function evaluation so might need improvement
+
+function graph_linefunc(h :: AbstractLineFunction2,
+                        h₀ :: Float64,
+                        g₀ :: Float64;
+                        τ₀ :: Float64 = 1e-4,
+                        τ₁ :: Float64 = 0.9999,
                         precision :: Float64 = 0.025,
                         a :: Float64 = 0.0,
                         b :: Float64 = 25.0,
@@ -7,24 +17,25 @@ function graph_linefunc(h :: AbstractLineFunction2;
                         verboseGraph :: Bool = false,
                         kwargs...)
 
+  PyPlot.clf()               #clear the existing figure...        
+
   x_axis = []
   y_axis = []
   i = a
 
-  while i <= b
+  while i <= b               #"shape" of h
     push!(x_axis, i)
     push!(y_axis, obj(h,i))
     i += precision
   end
 
-  verboseGraph && println(" ")
-  verboseGraph && println("x_axis = $x_axis")
-  verboseGraph && println("y_axis = $y_axis")
+  x = PyPlot.linspace(Int(a), Int(b),200)
+  y = (τ₀*g₀)*x + h₀                       #armijo condition
 
-  graph_line_func = scatter(x_axis, y_axis, color = color)
+  PyPlot.figure(1)
+  PyPlot.plot(x,y)                                      #we "put" the armijo condition in the graph
+  PyPlot.scatter(x_axis,y_axis, color = color, s = 10.0) #we put the "shape" of h in the graph
 
-  display(graph_line_func)
 
-  return graph_line_func
 
 end

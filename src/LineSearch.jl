@@ -11,6 +11,8 @@ using LSDescentMethods
 
 using LineSearches
 
+using Plots, PyPlot
+
 include("includes.jl")
 
 include("algorithms.jl")

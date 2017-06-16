@@ -13,13 +13,13 @@ export _strongwolfe2!, zoom2, interpolate2
 #
 #
 # @with_kw immutable StrongWolfe{T}
-#    c1::T = 1e-4
-#    c2::T = 0.9
+#    τ₀::T = 1e-4
+#    τ₁::T = 0.9
 #    rho::T = 2.0
 # end
 
 # (ls::StrongWolfe)(args...) =
-#         _strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
+#         _strongwolfe!(args...; τ₀=ls.τ₀, τ₁=ls.τ₁, rho=ls.rho)
 
 T = Float64
 
@@ -30,8 +30,8 @@ function _strongwolfe2!{T}(h::C1LineFunction2,
                            lsr::LineSearchResults{T}=LineSearchResults([0.0],[f],[slope],0),
                            alpha0::Real=1.0,
                            mayterminate::Bool=false,
-                           c1::Real = 1e-4,
-                           c2::Real = 0.9,
+                           τ₀::Real = 1e-4,
+                           τ₁::Real = 0.9,
                            rho::Real = 2.0,
                            kwargs...)
     df = h.nlp
@@ -72,7 +72,7 @@ function _strongwolfe2!{T}(h::C1LineFunction2,
         phi_a_i = obj(df,x_new)
 
         # Test Wolfe conditions
-        if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) ||
+        if (phi_a_i > phi_0 + τ₀ * a_i * phiprime_0) ||
             (phi_a_i >= phi_a_iminus1 && i > 1)
             a_star = zoom2(a_iminus1, a_i,
                           phiprime_0, phi_0,
@@ -88,7 +88,7 @@ function _strongwolfe2!{T}(h::C1LineFunction2,
         phiprime_a_i = vecdot(grad(df,x_new), p)
 
         # Check condition 2
-        if abs(phiprime_a_i) <= -c2 * phiprime_0
+        if abs(phiprime_a_i) <= -τ₁ * phiprime_0
             return a_i
         end
 
@@ -123,8 +123,8 @@ function zoom2(a_lo::Real,
               x::Vector,
               p::Vector,
               x_new::Vector;
-              c1::Real = 1e-4,
-              c2::Real = 0.9,
+              τ₀::Real = 1e-4,
+              τ₁::Real = 0.9,
               kwargs...)
     #print_with_color(:yellow,"dans zoom2 \n")
     # Parameter space
@@ -181,7 +181,7 @@ function zoom2(a_lo::Real,
         phi_a_j = obj(df, x_new)
 
         # Check Armijo
-        if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||
+        if (phi_a_j > phi_0 + τ₀ * a_j * phiprime_0) ||
             (phi_a_j > phi_a_lo)
             a_hi = a_j
         else
@@ -189,7 +189,7 @@ function zoom2(a_lo::Real,
             grad(df, x_new)
             phiprime_a_j = vecdot(grad(df,x_new), p)
 
-            if abs(phiprime_a_j) <= -c2 * phiprime_0
+            if abs(phiprime_a_j) <= -τ₁ * phiprime_0
                 return a_j
             end
 

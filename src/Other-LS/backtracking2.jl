@@ -9,7 +9,7 @@ export _backtracking2!
 # This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 
 # @with_kw immutable BackTracking{TF, TI}
-#     c1::TF = 1e-4
+#     τ₀::TF = 1e-4
 #     rhohi::TF = 0.5
 #     rholo::TF = 0.1
 #     iterations::TI = 1_000
@@ -19,7 +19,7 @@ export _backtracking2!
 #
 # (ls::BackTracking)(df, x, s, x_scratch, lsr, alpha, mayterminate) =
 #     _backtracking!(df, x, s, x_scratch, lsr, alpha, mayterminate,
-#              ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
+#              ls.τ₀, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
 
 T = Float64
 
@@ -30,7 +30,7 @@ function _backtracking2!{T}(h::C1LineFunction2,
                             lsr::LineSearchResults=LineSearchResults{Float64}([0.0],[f],[slope],0),
                             alpha::Real = 1.0,
                             mayterminate::Bool = false,
-                            c1::Real = 1e-4,
+                            τ₀::Real = 1e-4,
                             rhohi::Real = 0.5,
                             rholo::Real = 0.1,
                             iterations::Integer = 1_000,
@@ -46,10 +46,10 @@ function _backtracking2!{T}(h::C1LineFunction2,
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
     #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
-    #if c1 >= backtrack_condition
-    #    warn("""The Armijo constant c1 is too large; replacing it with
+    #if τ₀ >= backtrack_condition
+    #    warn("""The Armijo constant τ₀ is too large; replacing it with
     #                   $(backtrack_condition)""")
-    #   c1 = backtrack_condition
+    #   τ₀ = backtrack_condition
     #end
 
     # Count the total number of iterations
@@ -72,7 +72,7 @@ function _backtracking2!{T}(h::C1LineFunction2,
     # f_x_scratch = NLSolversBase.value!(df, x_scratch)
     f_x_scratch = obj(df, x_scratch)
     push!(lsr.value, f_x_scratch)
-    while f_x_scratch > f_x + c1 * alpha * gxp
+    while f_x_scratch > f_x + τ₀ * alpha * gxp
         # Increment the number of steps we've had to perform
         iteration += 1
 
@@ -89,8 +89,8 @@ function _backtracking2!{T}(h::C1LineFunction2,
             # This interpolates the available data
             #    f(0), f'(0), f(α)
             # with a quadractic which is then minimised; this comes with a
-            # guaranteed backtracking factor 0.5 * (1-c1)^{-1} which is < 1
-            # provided that c1 < 1/2; the backtrack_condition at the beginning
+            # guaranteed backtracking factor 0.5 * (1-τ₀)^{-1} which is < 1
+            # provided that τ₀ < 1/2; the backtrack_condition at the beginning
             # of the function guarantees at least a backtracking factor rho.
             alphatmp = - (gxp * alpha^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha) )
         else

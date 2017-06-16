@@ -10,28 +10,19 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
                               verboseLS :: Bool=false,
                               kwargs...)
 
-  #println("verboseLS=",verboseLS)
   iter=1
   t₀=0.0
   inc=inc0
-  #sd=-sign(g₀)
-  #t₁=t₀+sd*inc
-  #println("")
+
   φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
   dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
-  #dφ(t) = grad(h,t) - τ₀*g₀
-
-  #println("dans trouve_intervalle_ls h₀=",h₀," g₀=",g₀)
-  #println("version calculé h₀=",obj(h,0.0)," g₀=",grad(h,0.0))
 
   φt₀ = 0.0          # on sait que φ(0)=0
   dφt₀ = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
-  #dφt₀=dφ(t₀)
   sd=-sign(dφt₀)
   t₁=t₀+sd*inc
   φt1=φ(t₁)
   dφt1=dφ(t₁)
-
 
   ɛa = (τ₁-τ₀)*g₀
   ɛb = -(τ₁+τ₀)*g₀
@@ -40,11 +31,8 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
   verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, t₀,φt₀,dφt₀,t₁,φt1,dφt1)
 
   while (dφt1*sd<0.0) & (φt1<φt₀) & (iter<maxiter)
-    #println("on entre ici premier while")
     inc=inc*4
-    t₀=t₁
-    φt₀=φt1
-    dφt₀=dφt1
+    t₀=t₁; φt₀=φt1; dφt₀=dφt1
     t₁=t₀+sd*inc
     φt1=φ(t₁)
     dφt1=dφ(t₁)
@@ -54,7 +42,6 @@ function trouve_intervalle_ls(h :: AbstractLineFunction2,
   end
 
   while (dφt1*sd<0.0) & (iter<maxiter)
-    #println("on entre ici deuxième while")
     tₘ=(t₁+t₀)/2
     φₘ=φ(tₘ)
     dφₘ=dφ(tₘ)

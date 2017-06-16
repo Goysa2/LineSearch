@@ -8,6 +8,6 @@ function Armijo(t::Float64,
     fact = -0.8
     Eps = 1e-10
     hgoal = h₀ + g₀ * t * τ₀
-    Armijo_HZ = (ht <= hgoal) | ((ht <= h₀ + Eps * abs(h₀)) & (gt <= fact * g₀)) 
+    Armijo_HZ = (ht <= hgoal) || ((ht <= h₀ + Eps * abs(h₀)) & (gt <= fact * g₀)) 
     return Armijo_HZ
 end

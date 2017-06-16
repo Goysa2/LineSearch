@@ -17,7 +17,7 @@ export _morethuente2!, csttep2
 #     uncertainty is initially chosen so that it contains a
 #     minimizer of the modified function
 #
-#          f(x + stp * s) - f(x) - f_tol * stp * (gradf(x)' * s).
+#          f(x + stp * s) - f(x) - τ₀ * stp * (gradf(x)' * s).
 #
 #     If a step is obtained for which the modified function
 #     has a nonpositive function value and nonnegative derivative,
@@ -27,13 +27,13 @@ export _morethuente2!, csttep2
 #     The algorithm is designed to find a step which satisfies
 #     the sufficient decrease condition
 #
-#           f(x + stp * s) <= f(x) + f_tol * stp * (gradf(x)' * s),
+#           f(x + stp * s) <= f(x) + τ₀ * stp * (gradf(x)' * s),
 #
 #     and the curvature condition
 #
-#           abs(gradf(x + stp * s)' * s)) <= gtol * abs(gradf(x)' * s).
+#           abs(gradf(x + stp * s)' * s)) <= τ₁ * abs(gradf(x)' * s).
 #
-#     If f_tol is less than gtol and if, for example, the function
+#     If τ₀ is less than τ₁ and if, for example, the function
 #     is bounded below, then there is always a step which satisfies
 #     both conditions. If no step can be found which satisfies both
 #     conditions, then the algorithm usually stops when rounding
@@ -42,7 +42,7 @@ export _morethuente2!, csttep2
 #
 #     The subroutine statement is
 #
-#        subroutine cvsrch(df,n,x,f,s,stp,f_tol,gtol,x_tol,
+#        subroutine cvsrch(df,n,x,f,s,stp,τ₀,τ₁,x_tol,
 #                          stpmin,stpmax,maxfev,info,nfev,wa)
 #
 #     where
@@ -85,7 +85,7 @@ export _morethuente2!, csttep2
 #    initial estimate of a satisfactory step. On output
 #    stp contains the final estimate.
 #
-#  f_tol and gtol are nonnegative input variables. Termination
+#  τ₀ and τ₁ are nonnegative input variables. Termination
 #    occurs when the sufficient decrease condition and the
 #    directional derivative condition are satisfied.
 #
@@ -135,8 +135,8 @@ export _morethuente2!, csttep2
 
 
 # @with_kw immutable MoreThuente{T}
-#     f_tol::T = 1e-4
-#     gtol::T = 0.9
+#     τ₀::T = 1e-4
+#     τ₁::T = 0.9
 #     x_tol::T = 1e-8
 #     stpmin::T = 1e-16
 #     stpmax::T = 65536.0
@@ -145,7 +145,7 @@ export _morethuente2!, csttep2
 #
 # (ls::MoreThuente)(args...) =
 #        _morethuente!(args...;
-#                    f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.stpmin,
+#                    τ₀=ls.τ₀, τ₁=ls.τ₁, x_tol=ls.x_tol, stpmin=ls.stpmin,
 #                    stpmax=ls.stpmax, maxfev=ls.maxfev)
 
 T = Float64
@@ -158,8 +158,8 @@ function _morethuente2!{T}(h::C1LineFunction2,
                            stp::Real=1.0,
                            mayterminate::Bool=false,
                            n::Integer = length(h.x),
-                           f_tol::Real = 1e-4,
-                           gtol::Real = 0.9,
+                           τ₀::Real = 1e-4,
+                           τ₁::Real = 0.9,
                            x_tol::Real = 1e-8,
                            stpmin::Real = 1e-16,
                            stpmax::Real = 65536.0,
@@ -180,7 +180,7 @@ function _morethuente2!{T}(h::C1LineFunction2,
     # Check the input parameters for errors.
     #
 
-    if n <= 0 || stp <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
+    if n <= 0 || stp <= 0.0 || τ₀ < 0.0 || τ₁ < 0.0 ||
         x_tol < 0.0 || stpmin < 0.0 || stpmax < stpmin || maxfev <= 0
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
@@ -201,7 +201,7 @@ function _morethuente2!{T}(h::C1LineFunction2,
     stage1 = true
     nfev = 0
     finit = f
-    dgtest = f_tol * dginit
+    dgtest = τ₀ * dginit
     width = stpmax - stpmin
     width1 = 2 * width
     copy!(x_new, x)
@@ -267,10 +267,10 @@ function _morethuente2!{T}(h::C1LineFunction2,
 
         # f = NLSolversBase.value_gradient!(df, x_new)
         f = obj(df, x_new)
-        # if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's gtol
+        # if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's τ₁
         #     return stp
         # end
-        if isapprox(norm(grad(df,x_new)), 0) # TODO: this should be tested vs Optim's gtol
+        if isapprox(norm(grad(df,x_new)), 0) # TODO: this should be tested vs Optim's τ₁
             return stp
         end
 
@@ -301,7 +301,7 @@ function _morethuente2!{T}(h::C1LineFunction2,
         if bracketed && stmax - stmin <= x_tol * stmax
             info = 2
         end
-        if f <= ftest1 && abs(dg) <= -gtol * dginit
+        if f <= ftest1 && abs(dg) <= -τ₁ * dginit
             info = 1
         end
 
@@ -318,7 +318,7 @@ function _morethuente2!{T}(h::C1LineFunction2,
         # function has a nonpositive value and nonnegative derivative.
         #
 
-        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dginit
+        if stage1 && f <= ftest1 && dg >= min(τ₀, τ₁) * dginit
             stage1 = false
         end
 

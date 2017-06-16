@@ -45,3 +45,6 @@ include("Other-LS/strongwolfe2.jl")
 include("Other-LS/morethuente2.jl")
 include("Other-LS/hagerzhang2.jl")
 include("Other-LS/backtracking2.jl")
+
+#graohic tool
+include("graph_linefunc.jl")

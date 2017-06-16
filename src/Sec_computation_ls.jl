@@ -13,5 +13,5 @@ function Sec_computation_ls(t::Float64,
   y = dφt - dφtprec
   seck = y/s
 
-  return (t,φt,dφt,s,y,seck)
+  return (t,φt,dφt,seck)
 end
