@@ -17,7 +17,7 @@ function graph_linefunc(h :: AbstractLineFunction2,
                         verboseGraph :: Bool = false,
                         kwargs...)
 
-  PyPlot.clf()               #clear the existing figure...        
+  PyPlot.clf()               #clear the existing figure...
 
   x_axis = []
   y_axis = []
@@ -29,7 +29,7 @@ function graph_linefunc(h :: AbstractLineFunction2,
     i += precision
   end
 
-  x = PyPlot.linspace(Int(a), Int(b),200)
+  x = PyPlot.linspace(a, b,200)
   y = (τ₀*g₀)*x + h₀                       #armijo condition
 
   PyPlot.figure(1)

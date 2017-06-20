@@ -2,12 +2,12 @@ export Nwt_computation_ls
 function Nwt_computation_ls(t::Float64,
                             d::Float64,
                             φtestTR::Float64,
-                            h::AbstractLineFunction2,
-                            dφ ::Function)
+                            dφtestTR::Float64,
+                            h::AbstractLineFunction2)
   t = t + d
 
   φt = φtestTR
-  dφt = dφ(t)
+  dφt = dφtestTR
   ddφt = hess(h,t)
 
   return (t,φt,dφt,ddφt)

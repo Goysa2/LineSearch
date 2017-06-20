@@ -7,10 +7,11 @@ function Biss_Sec_ls(h :: AbstractLineFunction2,
                  τ₁ :: Float64=0.9999,
                  maxiter :: Int=50,
                  verboseLS :: Bool=false,
+                 debug :: Bool = false,
                  check_param :: Bool = false,
                  kwargs...)
 
-    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))             
+    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
     t = 1.0
     ht = obj(h,t)
@@ -20,7 +21,7 @@ function Biss_Sec_ls(h :: AbstractLineFunction2,
     end
 
 
-    (ta,tb)=trouve_intervalle_ls(h,h₀,g₀,g)
+    (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g)
 
     γ=0.8
     t=ta
@@ -31,18 +32,22 @@ function Biss_Sec_ls(h :: AbstractLineFunction2,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
-    φt=φ(t)
-    φtm1=φ(tqnp)
-    dφt=dφ(t)
-    dφtm1=dφ(tqnp)
+    φt = φta
+    φtm1 = φtb
+    dφt = dφta
+    dφtm1 = dφtb
 
-    dφa=dφ(ta)
-    dφb=dφ(tb)
+    dφa = dφta
+    dφb = dφtb
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
 
-    admissible = false
+    admissible = ((dφt>=ɛa) & (dφt<=ɛb))
     tired=iter > maxiter
+
+    debug && PyPlot.figure(1)
+    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+
     verboseLS && @printf("   iter   tp       tqnp        t        dφt\n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
 
@@ -93,6 +98,9 @@ function Biss_Sec_ls(h :: AbstractLineFunction2,
 
       admissible = (dφt>=ɛa) & (dφt<=ɛb)
       tired=iter>maxiter
+
+      debug && PyPlot.figure(1)
+      debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
       verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
     end;

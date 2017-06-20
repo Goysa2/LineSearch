@@ -8,6 +8,7 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
                      maxiter :: Int=50,
                      verboseLS :: Bool=false,
                      check_param :: Bool = false,
+                     debug :: Bool = false,
                      kwargs...)
 
   (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -16,13 +17,13 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
   ht = obj(h,t)
   gt = grad!(h, t, g)
   if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-    verboseLS && @printf("   iter   t\n");
-    verboseLS && @printf("%4d %9.2e \n", 0,1.0);
+    # verboseLS && @printf("   iter   t\n");
+    # verboseLS && @printf("%4d %9.2e \n", 0,1.0);
     return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
   end
 
 
-  (ta,tb)=trouve_intervalle_ls(h,h₀,g₀,g, verboseLS = verboseLS)
+  (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g, verboseLS = verboseLS, debug = debug)
   verboseLS && println("ta = $ta tb = $tb")
 
    γ=0.8
@@ -37,17 +38,20 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
 
    iter=0
 
-   dφt=dφ(t)
-   dφa=dφ(ta)
-   dφb=dφ(tb)
+   dφt = dφta
+   dφa = dφta
+   dφb = dφtb
 
    ɛa = (τ₁-τ₀)*g₀
    ɛb = -(τ₁+τ₀)*g₀
 
    verboseLS && println("ϵₐ = $ɛa ϵᵦ = $ɛb")
 
-   admissible=false
+   admissible = ((dφt>=ɛa) & (dφt<=ɛb))
    tired =  iter>maxiter
+
+   debug && PyPlot.figure(1)
+   debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀*t*g₀])      #costs an additionnal function evaluation
 
    verboseLS && @printf(" iter     tqnp        t         dφtqnp     dφt        \n")
    verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφa,dφb)
@@ -95,7 +99,10 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
 
      iter = iter+1
      admissible = ((dφt>=ɛa) & (dφt<=ɛb))
-     println("admissible = $admissible")
+
+     debug && PyPlot.figure(1)
+     debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀*t*g₀])    #costs an additionnal function evaluation
+
      tired =  iter>maxiter
 
      verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtqnp,dφt)

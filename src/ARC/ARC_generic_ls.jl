@@ -3,17 +3,18 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
                         h₀ :: Float64,
                         g₀ :: Float64,
                         g :: Array{Float64,1};
-                        eps1 = 0.4,
+                        eps1 = 0.25,
                         eps2 = 0.75,
                         red = 0.5,
                         aug = 5.0,
                         Δ=1.0,
                         τ₀ :: Float64=1.0e-4,
                         τ₁ :: Float64=0.9999,
-                        maxiter :: Int64=50,
+                        maxiterLS :: Int64=50,
                         verboseLS :: Bool=false,
                         direction :: String="Nwt",
                         check_param :: Bool = false,
+                        debug :: Bool = false,
                         kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different parameters"))
@@ -22,8 +23,8 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
 
     (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
     if A_W
-      verboseLS && @printf("   iter   t        Δ\n");
-      verboseLS && @printf("%4d %9.2e %9.2e\n", 0,1.0,Δ);
+      # verboseLS && @printf("   iter   t        Δ\n");
+      # verboseLS && @printf("%4d %9.2e %9.2e\n", 0,1.0,Δ);
       return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
@@ -43,21 +44,27 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
 
     dφt = dφ(t)
 
+    ddφt = NaN
+
     if direction=="Nwt"
-      ddφt = ddφ(0.0)
+      ddφt = ddφ(t)
       #q(d) = φt + dφt*d + 0.5*ddφt*d^2
     elseif direction=="Sec" || direction=="SecA"
       seck=1.0
       #q(d)=φt + dφt*d + 0.5*seck*d^2
     end
 
-    verboseLS && println("ϵₐ = $ɛa ϵᵦ = $ɛb")
+    verboseLS && println("   ϵₐ = $ɛa ϵᵦ = $ɛb")
 
 
     admissible = false
-    tired=iter>maxiter
-    verboseLS && @printf("   iter   t       φt        dφt        Δ\n");
-    verboseLS && @printf("%4d %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ);
+    tired=iter>maxiterLS
+
+    debug && PyPlot.figure(1)
+    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+
+    verboseLS && @printf("   iter   t       φt        dφt        ddφt        Δ        Successful        dN\n");
+    verboseLS && @printf("%4d %9.2e  %9.2e  %9.2e %9.2e  %9.2e\n", iter,t,φt,dφt,ddφt,Δ);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
@@ -67,8 +74,12 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
           d=ARC_step_computation(seck,dφt,Δ; kwargs...)
         end
 
+        # println("calcul d = $d")
+
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
+
+        # println("avant calcul dφt = $dφt φt = $φt  ddφt = $ddφt d = $d φtestTR = $φtestTR dφtestTR = $dφtestTR")
 
         # test d'arrêt sur dφ
         if direction=="Nwt"
@@ -76,6 +87,8 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
         elseif direction=="Sec" || direction=="SecA"
           (pred,ared,ratio)=pred_ared_computation(dφt,φt,seck,d,φtestTR,dφtestTR)
         end
+
+        #verboseLS && println("ratio = $ratio eps1 = $eps1")
 
         if direction=="Nwt"
           tprec = t
@@ -92,31 +105,33 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
         end
 
         if ratio < eps1  # Unsuccessful
-            Δ=red*Δ
-            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e  %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t+d,φtestTR);
+          Δ=red*Δ
+          iter += 1
+          verboseLS && @printf("%4d %9.2e %9.2e  %9.2e  %9.2e  %9.2e %9.2e %7.2e\n", iter,t,φt,dφt,ddφt,Δ,0,d);
+          # sleep(30)
+          #print_with_color(:red,"!!! \n")
         else             # Successful
 
-            if direction=="Nwt"
-              (t,φt,dφt,ddφt)=Nwt_computation_ls(t, d , φtestTR, h, dφ)
-            elseif direction=="Sec"
-              (t,φt,dφt,seck)=Sec_computation_ls(t, tprec, dφtprec, d, φtestTR,dφtestTR)
-            elseif direction=="SecA"
-              (t,φt,dφt,s,y,seck)=SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR,dφtestTR)
-            end
+          if direction=="Nwt"
+            (t,φt,dφt,ddφt)=Nwt_computation_ls(t, d , φtestTR, dφtestTR, h)
+          elseif direction=="Sec"
+            (t,φt,dφt,seck)=Sec_computation_ls(t, tprec, dφtprec, d, φtestTR,dφtestTR)
+          elseif direction=="SecA"
+            (t,φt,dφt,s,y,seck)=SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR,dφtestTR)
+          end
 
-            if ratio > eps2
+          if ratio > eps2
             Δ = aug*Δ
-            end
+          end
 
-            admissible = ((dφt>=ɛa) & (dφt<=ɛb)) # Wolfe, Armijo garanti par la
-                                                    # descente
-            PyPlot.figure(1)
-            PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
-            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,t,φt,dφt,Δ);
+          admissible = ((dφt>=ɛa) & (dφt<=ɛb)) # Wolfe, Armijo garanti par la
+                                                  # descente
+          debug && PyPlot.figure(1)
+          debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+          iter += 1
+          tired = iter > maxiterLS
+          verboseLS && @printf("%4d %9.2e %9.2e  %9.2e  %9.2e  %9.2e  %9.2e %7.2e \n", iter,t,φt,dφt,ddφt,Δ,1,d);
         end;
-
-        iter += 1
-        tired = iter > maxiter
     end;
 
     # recover h

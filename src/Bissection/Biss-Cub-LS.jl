@@ -9,6 +9,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
                      maxiter :: Int=100,
                      verboseLS :: Bool=false,
                      check_param :: Bool = false,
+                     debug :: Bool = false,
                      kwargs...)
 
   (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -22,7 +23,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
 
  #println("au début de Biss_Cub_ls g₀=",g₀)
 
- (ta,tb)=trouve_intervalle_ls(h,h₀,g₀,g)
+ (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g)
 
  #println("on est après le trouve_intervalle_ls")
 
@@ -41,18 +42,21 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
 
  iter=0
 
- φt=φ(t)
- φtm1=φ(tqnp)
- dφt=dφ(t)
- dφtm1=dφ(tqnp)
+ φt=φta
+ φtm1=φtb
+ dφt=dφta
+ dφtm1=dφtb
 
- dφa=dφ(ta)
- dφb=dφ(tb)
+ dφa=dφta
+ dφb=dφtb
 
  ɛa = (τ₁-τ₀)*g₀
  ɛb = -(τ₁+τ₀)*g₀
- admissible=false
- tired =  iter>maxiter
+ admissible = ((dφt>=ɛa) & (dφt<=ɛb))
+ tired =  iter > maxiter
+
+ debug && PyPlot.figure(1)
+ debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
  verboseLS && @printf(" iter        tqnp        t         dφtm1        dφt        \n")
  verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
@@ -114,6 +118,9 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
    iter=iter+1
    admissible = (dφt>=ɛa) & (dφt<=ɛb)
    tired=iter>maxiter
+
+   debug && PyPlot.figure(1)
+   debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
    verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
  end

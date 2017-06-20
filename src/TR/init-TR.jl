@@ -4,7 +4,9 @@ function init_TR(h :: AbstractLineFunction2,
                  g₀ :: Float64,
                  g :: Array{Float64,1},
                  τ₀ :: Float64,
-                 τ₁ :: Float64)
+                 τ₁ :: Float64;
+                 Δ :: Float64 = 1.0,
+                 kwargs...)
 
 t=1.0
 ht = obj(h,t)
@@ -18,12 +20,12 @@ if A && W
 end
 
 if A
-  Δp = 1.0  # >=0
-  Δn = -1.0  # <=0
+  Δp = Δ  # >=0
+  Δn = -Δ  # <=0
   t=1.0
 else
-  Δp = 1.0  # >=0
-  Δn = 0.0  # <=0
+  Δp = Δ  # >=0
+  Δn = max(0.0, -Δ)  # <=0
   t=0.0
 end
 

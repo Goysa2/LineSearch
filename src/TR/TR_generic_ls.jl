@@ -10,15 +10,16 @@ function TR_generic_ls(h :: AbstractLineFunction2,
                        aug :: Float64= 10.0,
                        τ₁ :: Float64=0.9999,
                        maxiter :: Int64=50,
-                       verbose :: Bool=false,
+                       verboseLS :: Bool=false,
                        direction :: String="Nwt",
                        check_param :: Bool = false,
+                       debug :: Bool = true,
                        kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
     t = 1.0
-    (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
+    (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁;kwargs...)
 
     if A_W
       return (t,true,ht,0.0,0.0,false, h.f_eval, h.g_eval, h.h_eval)
@@ -35,6 +36,8 @@ function TR_generic_ls(h :: AbstractLineFunction2,
 
     dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
 
+    ddφt = NaN
+
     if direction=="Nwt"
       ddφt = hess(h,t)
     elseif direction=="Sec" || direction=="SecA"
@@ -47,10 +50,16 @@ function TR_generic_ls(h :: AbstractLineFunction2,
       q(d)=φt + dφt*d + 0.5*seck*d^2
     end
 
+    verboseLS && println("   ϵₐ = $ɛa ϵᵦ = $ɛb")
+
     admissible = false
     tired=iter > maxiter
-    verbose && @printf("   iter   t       φt        dφt        Δn        Δp        t+d        φtestTR\n")
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
+
+    debug && PyPlot.figure(1)
+    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+
+    verboseLS && @printf("   iter   t       φt        dφt        ddφt        Δn        Δp        Successful        dN\n")
+    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,ddφt,Δn,Δp);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
 
@@ -85,10 +94,11 @@ function TR_generic_ls(h :: AbstractLineFunction2,
         if ratio < eps1  # Unsuccessful
             Δp = red*Δp
             Δn = red*Δn
-            verbose && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δn,Δp,t+d,φtestTR);
+            iter+=1
+            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e  %9.2e  %9.2e\n", iter,t,φt,dφt,ddφt,Δn,Δp,0,dN);
         else             # Successful
             if direction=="Nwt"
-              (t,φt,dφt,ddφt)=Nwt_computation_ls(t,d,φtestTR,h,dφ)
+              (t,φt,dφt,ddφt)=Nwt_computation_ls(t,d,φtestTR,dφtestTR,h)
             elseif direction=="Sec"
               (t,φt,dφt,s,y,seck)=Sec_computation_ls(t,tprec, dφtprec, d, φtestTR,dφtestTR)
             elseif direction=="SecA"
@@ -105,9 +115,12 @@ function TR_generic_ls(h :: AbstractLineFunction2,
 
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
-            verbose && @printf("N %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
+
+            debug && PyPlot.figure(1)
+            debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+            iter+=1
+            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,ddφt,Δn,Δp,1,dN);
         end;
-        iter+=1
         tired=iter>maxiter
     end;
 
