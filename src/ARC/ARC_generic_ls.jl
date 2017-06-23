@@ -21,11 +21,11 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
 
     #println("on rentre dans ARC τ₀ = $τ₀ τ₁ = $τ₁")
 
-    (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
-    if A_W
+    (t,ht,gt,A,W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
+    if A && W
       # verboseLS && @printf("   iter   t        Δ\n");
       # verboseLS && @printf("%4d %9.2e %9.2e\n", 0,1.0,Δ);
-      return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t,copy(t), true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
     # Specialized TR for handling non-negativity constraint on t
@@ -54,11 +54,18 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
       #q(d)=φt + dφt*d + 0.5*seck*d^2
     end
 
+    if A   #version 3
+      Δ = 100.0/abs(φt-φ(0.0))
+    else
+      Δ = 1.0/abs(ddφt)
+    end
+
     verboseLS && println("   ϵₐ = $ɛa ϵᵦ = $ɛb")
 
 
     admissible = false
     tired=iter>maxiterLS
+    t_original = NaN
 
     debug && PyPlot.figure(1)
     debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
@@ -117,7 +124,7 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
           elseif direction=="Sec"
             (t,φt,dφt,seck)=Sec_computation_ls(t, tprec, dφtprec, d, φtestTR,dφtestTR)
           elseif direction=="SecA"
-            (t,φt,dφt,s,y,seck)=SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR,dφtestTR)
+            (t,φt,dφt,seck)=SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR,dφtestTR)
           end
 
           if ratio > eps2
@@ -125,7 +132,28 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
           end
 
           admissible = ((dφt>=ɛa) & (dφt<=ɛb)) # Wolfe, Armijo garanti par la
-                                                  # descente
+                                               # descente
+
+          if admissible
+            t_original = copy(t)
+            dht = dφt + τ₀ * g₀
+            ddht = ddφt
+            if direction=="Nwt"
+              dN = -dφt/ddφt; # point stationnaire de q(d)
+              d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
+            elseif direction=="Sec" || direction=="SecA"
+              dN = -dφt/seck
+              d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
+            end
+            tprec= copy(t)
+            t = t + d
+            ht = obj(h,t)
+            dht = grad!(h,t,g)
+            verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+            verboseLS && (dφt = dht - τ₀ * g₀)
+            verboseLS && (ddφt = hess(h,t))
+          end
+
           debug && PyPlot.figure(1)
           debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
           iter += 1
@@ -135,8 +163,10 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
     end;
 
     # recover h
-    ht = φt + h₀ + τ₀*t*g₀
+    #ht = φt + h₀ + τ₀*t*g₀
 
-    return return (t, true, ht, iter, 0, false, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
+    #t_original = copy(t)
+
+    return (t, t_original, true, ht, iter, 0, tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 
 end

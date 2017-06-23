@@ -16,7 +16,7 @@ function Biss_ls(h :: AbstractLineFunction2,
     ht = obj(h,t)
     gt = grad!(h, t, g)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-      return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t, t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
 
@@ -34,6 +34,7 @@ function Biss_ls(h :: AbstractLineFunction2,
     ɛb = -(τ₁+τ₀)*g₀
 
     admissible = false
+    t_original = NaN
     tired=iter > maxiter
     verboseLS && @printf("   iter   ta       tb        tp        dφp\n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e \n", iter,ta,tb,tp,NaN);
@@ -54,9 +55,16 @@ function Biss_ls(h :: AbstractLineFunction2,
       admissible = (dφp>=ɛa) & (dφp<=ɛb)
       tired=iter>maxiter
 
+      if admissible
+        t_original = copy(tp)
+        tp=(ta+tb)/2
+        ht = obj(h,t)
+        dht = grad!(h,t,g)
+      end
+
       verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,ta,tb,tp,dφp);
     end;
 
-    ht = φ(tp) + h₀ + τ₀*tp*g₀
-    return (tp,false, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
+    #ht = φ(tp) + h₀ + τ₀*tp*g₀
+    return (tp, t_original, false, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 end

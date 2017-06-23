@@ -126,6 +126,40 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
             end
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
+
+            if admissible
+              t_original = copy(t)
+              cub(t)= φt + dφt*t + A*t^2 + B*t^3
+              #dcub(t)=dφt + 2*A*t + 3*B*t^2
+              p=Poly([dφt,2*A,3*B])
+
+              dR=roots(p)
+
+              if isreal(dR) & !isempty(dR)
+                dR=real(dR)
+                dN2=dR[1]
+                if length(dR)>1
+                  if cub(dR[1])>cub(dR[2])
+                    dN2=dR[2]
+                  end
+                end
+              else
+                dN2=-dφt*s/y
+              end
+
+              if (abs(dN2)<abs(Δp-Δn)) & (q(d)>q(dN2))
+                d=dN2
+              end
+
+              tprec= copy(t)
+              t = t + d
+              ht = obj(h,t)
+              dht = grad!(h,t,g)
+              verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+              verboseLS && (dφt = dht - τ₀ * g₀)
+              verboseLS && (ddφt = hess(h,t))
+            end
+
             verbose && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,α);
         end;
         iter=iter+1

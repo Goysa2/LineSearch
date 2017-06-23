@@ -19,7 +19,7 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
-      return (t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t, t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
     iter = 0
@@ -44,6 +44,7 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
     y=1.0
 
     admissible = false
+    t_original = NaN
     tired=iter > maxiter
     verboseLS && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
@@ -79,8 +80,9 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
         end
 
         if d == 0.0
+          print_with_color(:yellow, " poor roots \n")
           ht = φt + h₀ + τ₀*t*g₀
-          return (t,true, ht, iter+1,0,true)
+          return (t,t,true, ht, iter+1,0,true, h.f_eval, h.g_eval, h.h_eval)
         end
 
         φtestTR = φ(t+d)
@@ -127,6 +129,41 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
             end
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
+
+            # if admissible
+            #   t_original = copy(t)
+            #   cub(t)= φt + dφt*t + A*t^2 + B*t^3
+            #   #dcub(t)=dφt + 2*A*t + 3*B*t^2
+            #   p=Poly([dφt,2*A,3*B])
+            #
+            #   dR=roots(p)
+            #
+            #   if isreal(dR) & !isempty(dR)
+            #     dR=real(dR)
+            #     dN2=dR[1]
+            #     if length(dR)>1
+            #       if cub(dR[1])>cub(dR[2])
+            #         dN2=dR[2]
+            #       end
+            #     end
+            #   else
+            #     dN2=-dφt*s/y
+            #   end
+            #
+            #   if (abs(dN2)<abs(Δp-Δn)) & (q(d)>q(dN2))
+            #     d=dN2
+            #   end
+            #
+            #   tprec= copy(t)
+            #   t = t + d
+            #   ht = obj(h,t)
+            #   dht = grad!(h,t,g)
+            #   verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+            #   verboseLS && (dφt = dht - τ₀ * g₀)
+            #   verboseLS && (ddφt = hess(h,t))
+            # end
+
+
             verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
         end;
         iter+=1
@@ -135,6 +172,6 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
-    return (t,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)   #pourquoi le true et le 0?
+    return (t, t_original,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)   #pourquoi le true et le 0?
 
 end

@@ -5,7 +5,7 @@ function init_TR(h :: AbstractLineFunction2,
                  g :: Array{Float64,1},
                  τ₀ :: Float64,
                  τ₁ :: Float64;
-                 Δ :: Float64 = 1.0,
+                 Δ :: Float64 = 2.0,
                  kwargs...)
 
 t=1.0
@@ -16,14 +16,16 @@ A=Armijo(t,ht,gt,h₀,g₀,τ₀)
 W=Wolfe(gt,g₀,τ₁)
 
 if A && W
-  return (t, ht,gt,true,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)
+  return (t, ht,gt,true,0.0,0.0,0.0,0.0)
 end
 
 if A
+  # Δ = 100.0/abs(obj(h,t) - h₀ - τ₀*t*g₀ - (obj(h,0.0) - h₀ - τ₀*t*g₀))
   Δp = Δ  # >=0
   Δn = -Δ  # <=0
   t=1.0
 else
+  # Δ = 1.0/abs(hess(h,t))
   Δp = Δ  # >=0
   Δn = max(0.0, -Δ)  # <=0
   t=0.0

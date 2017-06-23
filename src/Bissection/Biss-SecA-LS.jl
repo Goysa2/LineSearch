@@ -17,7 +17,7 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
     ht = obj(h,t)
     gt = grad!(h, t, g)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-      return (t, true, ht, 0,0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t, t, true, ht, 0,0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
 
@@ -43,10 +43,11 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
     ɛb = -(τ₁+τ₀)*g₀
 
     admissible = ((dφt>=ɛa) & (dφt<=ɛb))
+    t_original = NaN
     tired=iter > maxiter
 
     debug && PyPlot.figure(1)
-    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])      
+    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
     verboseLS && @printf("   iter   tp       tqnp        t        dφt\n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,tp,tqnp,t,φt);
@@ -81,9 +82,6 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
           tp=t
           tqnp=t
           t=tplus
-        else
-          tqnp=t
-          t=tplus
         end
       else
         if dφplus>0
@@ -105,6 +103,30 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
       admissible = (dφt>=ɛa) & (dφt<=ɛb)
       tired=iter>maxiter
 
+      if admissible
+        t_original = copy(t)
+        dht = dφt + τ₀ * g₀
+        #ddht = ddφ(t)
+        s=t-tqnp
+        y=dφt-dφtm1
+
+        Γ=3*(dφt+dφtm1)*s-6*(φt-φtm1)
+        if y*s+Γ < eps(Float64)*(s^2)
+          yt=y
+        else
+          yt=y+Γ/s
+        end
+
+        dN=-dφt*s/yt
+        tprec= copy(t)
+        t = t + dN
+        ht = obj(h,t)
+        dht = grad!(h,t,g)
+        verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+        verboseLS && (dφt = grad(h,t) - τ₀ * g₀)
+        verboseLS && (ddφt = hess(h,t))
+      end
+
       debug && PyPlot.figure(1)
       debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
@@ -114,7 +136,7 @@ function Biss_SecA_ls(h :: AbstractLineFunction2,
     #println("après le while \n")
     #println("ta=",ta," tb=",tb)
 
-    ht = φ(t) + h₀ + τ₀*t*g₀
+    #ht = φ(t) + h₀ + τ₀*t*g₀
     #println("on a ht \n")
-    return (t,false, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
+    return (t, t_original, false, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 end

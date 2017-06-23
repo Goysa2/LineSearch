@@ -24,5 +24,5 @@ function SecA_computation_ls(t::Float64,
 
   seck=yt/s
 
-  return (t,φt,dφt,s,y,seck)
+  return (t,φt,dφt,seck)
 end

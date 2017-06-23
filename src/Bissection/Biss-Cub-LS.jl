@@ -18,7 +18,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
  ht = obj(h,t)
  gt = grad!(h, t, g)
  if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-   return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
+   return (t, t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
  end
 
  #println("au début de Biss_Cub_ls g₀=",g₀)
@@ -54,6 +54,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
  ɛb = -(τ₁+τ₀)*g₀
  admissible = ((dφt>=ɛa) & (dφt<=ɛb))
  tired =  iter > maxiter
+ t_original = NaN
 
  debug && PyPlot.figure(1)
  debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
@@ -117,6 +118,34 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
 
    iter=iter+1
    admissible = (dφt>=ɛa) & (dφt<=ɛb)
+
+   if admissible
+     t_original = copy(t)
+     dht = dφt + τ₀ * g₀
+     #ddht = ddφ(t)
+     s=t-tqnp
+     y=dφt-dφtm1
+
+     α=-s
+     z=dφt+dφtm1+3*(φt-φtm1)/α
+     discr=z^2-dφt*dφtm1
+     denom=dφt+dφtm1+2*z
+     if (discr>0) & (abs(denom)>eps(Float64))
+       #si on peut on utilise l'interpolation cubique
+       w=sqrt(discr)
+       dN=-s*(dφt+z+sign(α)*w)/(denom)
+     else #on se rabat sur une étape de sécante
+       dN=-dφt*s/y
+     end
+     tprec= copy(t)
+     t = t + dN
+     ht = obj(h,t)
+     dht = grad!(h,t,g)
+     verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+     verboseLS && (dφt = grad(h,t) - τ₀ * g₀)
+     #verboseLS && (ddφt = hess(h,t))
+   end
+
    tired=iter>maxiter
 
    debug && PyPlot.figure(1)
@@ -125,6 +154,6 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
    verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
  end
 
- ht = φ(t) + h₀ + τ₀*t*g₀
- return (t,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
+ #ht = φ(t) + h₀ + τ₀*t*g₀
+ return (t, t_original,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
 end

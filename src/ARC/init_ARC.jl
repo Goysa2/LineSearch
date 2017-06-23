@@ -14,7 +14,7 @@ A=Armijo(t,ht,gt,h₀,g₀,τ₀)
 W=Wolfe(gt,g₀,τ₁)
 
 if A && W
-  return (t, ht,gt,true,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)
+  return (t, ht,gt,A,W,(τ₁-τ₀)*g₀,-(τ₁+τ₀)*g₀)
 end
 
 if A
@@ -29,6 +29,6 @@ end
 ɛa = (τ₁-τ₀)*g₀
 ɛb = -(τ₁+τ₀)*g₀
 
-return (t,ht,gt,false,ɛa,ɛb)
+return (t,ht,gt,A,W,ɛa,ɛb)
 
 end

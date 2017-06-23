@@ -19,7 +19,7 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
   if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
     # verboseLS && @printf("   iter   t\n");
     # verboseLS && @printf("%4d %9.2e \n", 0,1.0);
-    return (t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
+    return (t,t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
   end
 
 
@@ -49,6 +49,7 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
 
    admissible = ((dφt>=ɛa) & (dφt<=ɛb))
    tired =  iter>maxiter
+   t_original = NaN
 
    debug && PyPlot.figure(1)
    debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀*t*g₀])      #costs an additionnal function evaluation
@@ -78,7 +79,11 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
          tp=t
          tqnp=t
          t=tplus
-       else
+       else      # d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
+      #  elseif direction=="Sec" || direction=="SecA"
+      #    dN = -dφt/seck
+      #    # d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
+      #  end
          tqnp=t
          t=tplus
        end
@@ -100,6 +105,21 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
      iter = iter+1
      admissible = ((dφt>=ɛa) & (dφt<=ɛb))
 
+     if admissible
+       t_original = copy(t)
+       dht = dφt + τ₀ * g₀
+       #ddht = ddφ(t)
+       ddφt = ddφ(t)
+       dN = -dφt/ddφt; # point stationnaire de q(d)
+       tprec= copy(t)
+       t = t + dN
+       ht = obj(h,t)
+       dht = grad!(h,t,g)
+       verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+       verboseLS && (dφt = grad(h,t) - τ₀ * g₀)
+       verboseLS && (ddφt = hess(h,t))
+     end
+
      debug && PyPlot.figure(1)
      debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀*t*g₀])    #costs an additionnal function evaluation
 
@@ -108,6 +128,6 @@ function Biss_Nwt_ls(h :: AbstractLineFunction2,
      verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtqnp,dφt)
    end
 
-   ht = φ(t) + h₀ + τ₀*t*g₀
-   return (t,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
+   # ht = φ(t) + h₀ + τ₀*t*g₀
+   return (t,t_original,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
 end
