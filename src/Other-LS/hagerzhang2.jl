@@ -87,6 +87,7 @@ function _hagerzhang2!{T}(h::C1LineFunction2,
                           f::Real,
                           slope::Real,
                           ∇ft::Array{T,1};
+                          lsr :: LineSearchResults{T} = LineSearchResults([0.0],[f],[slope],0),
                           mayterminate::Bool=false,
                           c::Real=1.0,
                           τ₀::Real = DEFAULTDELTA,
@@ -104,7 +105,7 @@ function _hagerzhang2!{T}(h::C1LineFunction2,
     x = copy(h.x)
     df = h.nlp
     xtmp = copy(h.x)
-    lsr = LineSearchResults([0.0],[f],[slope],0)
+    #lsr = LineSearchResults([0.0],[f],[slope],0)
 
     # println("on a τ₀ = $τ₀ et τ₁ = $τ₁")
 
@@ -277,8 +278,8 @@ function _hagerzhang2!{T}(h::C1LineFunction2,
         iter += 1
     end
 
-    throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
-                              lsr.alpha[ia],lsr))
+    # throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
+    #                           lsr.alpha[ia],lsr))
 
     return 0.0, 0.0, false, iter, NaN, true
 

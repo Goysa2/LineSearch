@@ -4,12 +4,12 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
                    τ₀ :: Float64=1.0e-4,
-                   eps1 :: Float64 = 0.1,
-                   eps2 :: Float64 = 0.7,
+                   eps1 :: Float64 = 0.2,
+                   eps2 :: Float64 = 0.8,
                    red :: Float64 = 0.15,
                    aug :: Float64= 10.0,
                    τ₁ :: Float64=0.9999,
-                   maxiter :: Int64=50,
+                   maxiterLS :: Int64=50,
                    verboseLS :: Bool=false,
                    check_param :: Bool = false,
                    kwargs...)
@@ -40,12 +40,10 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
     # Version avec la sécante: modèle quadratique
     q(d)=φt + dφt*d + A*d^2 + B*d^3
 
-    s=1.0
-    y=1.0
 
     admissible = false
     t_original = NaN
-    tired=iter > maxiter
+    tired=iter > maxiterLS
     verboseLS && @printf("   iter   t       φt        dφt        Δn        Δp  \n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
 
@@ -59,14 +57,43 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
 
         cub(t)= φt + dφt*t + A*t^2 + B*t^3
         #dcub(t)=dφt + 2*A*t + 3*B*t^2
-        p=Poly([dφt,2*A,3*B])
+        #p=Poly([dφt,2*A,3*B])
+        #dR=roots(p)                        #for now the roots tool is unstable
 
-        dR=roots(p)
 
-        if isreal(dR) & !isempty(dR)
+        # dR = PolynomialRoots.roots([dφt, 2*A, 3*B])
+        # #dR_1 = Complex{Float64}[NaN+NaN*im,3.24-0.0im]
+
+        dR = []
+
+        discr = (2*A)^2 - 4 * (3*B) * dφt
+
+        if B != 0
+          if discr == 0
+            root = (-2 * A)/(6 * B)
+            push!(dR, root)
+          elseif discr > 0
+            root1 = (-2 * A - sqrt(discr))/(6 * B)
+            root2 = (-2 * A + sqrt(discr))/(6 * B)
+            push!(dR, root1)
+            push!(dR, root2)
+          end
+        elseif B == 0.0
+          root = (-dφt)/2*A
+          push!(dR, root)
+        end
+
+        verboseLS && @show dR
+
+
+        if !isempty(dR)         ###isreal(dR) & !isempty(dR)
           dR=real(dR)
-          dN2=dR[1]
-          if length(dR)>1
+          if isfinite(dR[1])
+            dN2=dR[1]
+          elseif isfinite(dR[2])
+            dN2 = dR[2]
+          end
+          if length(dR)>1 && (isfinite(dR[1])) && (isfinite(dR[2]))
             if cub(dR[1])>cub(dR[2])
               dN2=dR[2]
             end
@@ -79,11 +106,7 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
           d=dN2
         end
 
-        if d == 0.0
-          print_with_color(:yellow, " poor roots \n")
-          ht = φt + h₀ + τ₀*t*g₀
-          return (t,t,true, ht, iter+1,0,true, h.f_eval, h.g_eval, h.h_eval)
-        end
+        verboseLS && @show d
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
@@ -130,44 +153,11 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
 
-            # if admissible
-            #   t_original = copy(t)
-            #   cub(t)= φt + dφt*t + A*t^2 + B*t^3
-            #   #dcub(t)=dφt + 2*A*t + 3*B*t^2
-            #   p=Poly([dφt,2*A,3*B])
-            #
-            #   dR=roots(p)
-            #
-            #   if isreal(dR) & !isempty(dR)
-            #     dR=real(dR)
-            #     dN2=dR[1]
-            #     if length(dR)>1
-            #       if cub(dR[1])>cub(dR[2])
-            #         dN2=dR[2]
-            #       end
-            #     end
-            #   else
-            #     dN2=-dφt*s/y
-            #   end
-            #
-            #   if (abs(dN2)<abs(Δp-Δn)) & (q(d)>q(dN2))
-            #     d=dN2
-            #   end
-            #
-            #   tprec= copy(t)
-            #   t = t + d
-            #   ht = obj(h,t)
-            #   dht = grad!(h,t,g)
-            #   verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
-            #   verboseLS && (dφt = dht - τ₀ * g₀)
-            #   verboseLS && (ddφt = hess(h,t))
-            # end
-
 
             verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
         end;
         iter+=1
-        tired=iter>maxiter
+        tired=iter>maxiterLS
     end
 
     # recover h

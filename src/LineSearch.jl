@@ -3,7 +3,8 @@ export algorithms, interfaced_algorithms
 export Newton_linesearch
 
 using JuMP, NLPModels, Optimize
-using Polynomials
+#using Polynomials
+using PolynomialRoots
 using ScalarOptimizationProblems
 using ScalarSolvers
 

@@ -138,12 +138,17 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
             t_original = copy(t)
             dht = dφt + τ₀ * g₀
             ddht = ddφt
+            # if direction=="Nwt"
+            #   dN = -dφt/ddφt; # point stationnaire de q(d)
+            #   d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
+            # elseif direction=="Sec" || direction=="SecA"
+            #   dN = -dφt/seck
+            #   d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
+            # end
             if direction=="Nwt"
-              dN = -dφt/ddφt; # point stationnaire de q(d)
-              d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
+              d=ARC_step_computation(ddφt,dφt,Δ; kwargs...)
             elseif direction=="Sec" || direction=="SecA"
-              dN = -dφt/seck
-              d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
+              d=ARC_step_computation(seck,dφt,Δ; kwargs...)
             end
             tprec= copy(t)
             t = t + d

@@ -5,8 +5,10 @@ function init_TR(h :: AbstractLineFunction2,
                  g :: Array{Float64,1},
                  τ₀ :: Float64,
                  τ₁ :: Float64;
-                 Δ :: Float64 = 2.0,
+                 Δ :: Float64 = 10.0,
                  kwargs...)
+
+# Δ = round(log(abs(g₀)),0)
 
 t=1.0
 ht = obj(h,t)
