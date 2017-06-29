@@ -11,7 +11,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
                    aug :: Float64 = 10.0,
                    α :: Float64 = 1.0,
                    maxiter :: Int64=50,
-                   verbose :: Bool=false,
+                   verboseLS :: Bool=false,
                    check_param :: Bool = false,
                    kwargs...)
 
@@ -20,7 +20,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
 
     if A_W
-      return (t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t, t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
     iter = 0
@@ -42,24 +42,24 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     # Version avec la sécante: modèle quadratique
     q(d)=φt + dφt*d + A*d^2 + B*d^3
 
-    # test d'arrêt sur dφ
-    #ɛa = (τ₁-τ₀)*g₀
-    #ɛb = -(τ₁+τ₀)*g₀
+    t_original = NaN
 
-    # verbose && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
+    # verboseLS && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
     admissible = false
     tired=iter>maxiter
-    verbose && @printf("   iter   t       φt        dφt        α        t+d      \n");
-    verbose && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t);
+    verboseLS && @printf("   iter   t       φt        dφt        α        t+d      \n");
+    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
         #step computation
         Quad(t) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*α))*t^4
         #dQuad(t) = dφt+2*A*t+3*B*t^2+(1/α)*t^3
 
-        p=Poly([dφt,2*A,3*B,(1/α)])
+        #p=Poly([dφt,2*A,3*B,(1/α)])
 
-        dR=roots(p)
+        dR=roots([dφt,2*A,3*B,(1/α)])
+
+        #dR = copy(dR_1)
 
         vmin=Inf
         for i=1:length(dR)
@@ -104,7 +104,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
 
         if ratio < eps1  # Unsuccessful
             α=red*α
-            verbose && @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t+d,φtestTR);
+            verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t+d,φtestTR);
         else             # Successful
             t = t + d
 
@@ -127,40 +127,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
 
-            if admissible
-              t_original = copy(t)
-              cub(t)= φt + dφt*t + A*t^2 + B*t^3
-              #dcub(t)=dφt + 2*A*t + 3*B*t^2
-              p=Poly([dφt,2*A,3*B])
-
-              dR=roots(p)
-
-              if isreal(dR) & !isempty(dR)
-                dR=real(dR)
-                dN2=dR[1]
-                if length(dR)>1
-                  if cub(dR[1])>cub(dR[2])
-                    dN2=dR[2]
-                  end
-                end
-              else
-                dN2=-dφt*s/y
-              end
-
-              if (abs(dN2)<abs(Δp-Δn)) & (q(d)>q(dN2))
-                d=dN2
-              end
-
-              tprec= copy(t)
-              t = t + d
-              ht = obj(h,t)
-              dht = grad!(h,t,g)
-              verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
-              verboseLS && (dφt = dht - τ₀ * g₀)
-              verboseLS && (ddφt = hess(h,t))
-            end
-
-            verbose && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,α);
+            verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,α);
         end;
         iter=iter+1
         tired=iter>maxiter
@@ -169,6 +136,6 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
 
-    return (t,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
+    return (t,t_original,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 
 end

@@ -14,6 +14,7 @@ function TR_generic_ls(h :: AbstractLineFunction2,
                        direction :: String="Nwt",
                        check_param :: Bool = false,
                        debug :: Bool = false,
+                       add_step :: Bool = false,
                        kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -120,25 +121,25 @@ function TR_generic_ls(h :: AbstractLineFunction2,
             admissible = (dφt>=ɛa) & (dφt<=ɛb)    # Wolfe, Armijo garanti par la
                                                   # descente
 
-            # if admissible
-            #   t_original = copy(t)
-            #   dht = dφt + τ₀ * g₀
-            #   ddht = ddφt
-            #   if direction=="Nwt"
-            #     dN = -dφt/ddφt; # point stationnaire de q(d)
-            #     d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
-            #   elseif direction=="Sec" || direction=="SecA"
-            #     dN = -dφt/seck
-            #     d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
-            #   end
-            #   tprec= copy(t)
-            #   t = t + d
-            #   ht = obj(h,t)
-            #   dht = grad!(h,t,g)
-            #   verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
-            #   verboseLS && (dφt = dht - τ₀ * g₀)
-            #   verboseLS && (ddφt = hess(h,t))
-            # end
+            if admissible && add_step
+              t_original = copy(t)
+              dht = dφt + τ₀ * g₀
+              ddht = ddφt
+              if direction=="Nwt"
+                dN = -dφt/ddφt; # point stationnaire de q(d)
+                d=TR_ls_step_computation(ddφt,dφt,dN,Δn,Δp)
+              elseif direction=="Sec" || direction=="SecA"
+                dN = -dφt/seck
+                d=TR_ls_step_computation(seck,dφt,dN,Δn,Δp)
+              end
+              tprec= copy(t)
+              t = t + d
+              ht = obj(h,t)
+              dht = grad!(h,t,g)
+              verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+              verboseLS && (dφt = dht - τ₀ * g₀)
+              verboseLS && (ddφt = hess(h,t))
+            end
 
             debug && PyPlot.figure(1)
             if admissible
@@ -157,7 +158,9 @@ function TR_generic_ls(h :: AbstractLineFunction2,
   #  println("t_original = $t_original")
 
     # recover h
-    # ht = φt #+ h₀ + τ₀*t*g₀
+    if !add_step
+      ht = φt + h₀ + τ₀*t*g₀
+    end
     # dht = dφt + τ₀*g₀
 
     return (t, t_original, true, ht, iter, 0, tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
