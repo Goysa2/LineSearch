@@ -11,13 +11,19 @@ function TR_generic_ls(h :: AbstractLineFunction2,
                        τ₁ :: Float64=0.9999,
                        maxiterLS :: Int64=50,
                        verboseLS :: Bool=false,
+                       symetrique :: Bool = false,
                        direction :: String="Nwt",
                        check_param :: Bool = false,
                        debug :: Bool = false,
                        add_step :: Bool = false,
+                       check_slope :: Bool = false,
                        kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
+    if check_slope
+      (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    end
 
     t = 1.0
     t_original = NaN
@@ -60,8 +66,8 @@ function TR_generic_ls(h :: AbstractLineFunction2,
     debug && PyPlot.figure(1)
     debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
-    verboseLS && @printf("  iter   t       φt        dφt        ddφt        Δn        Δp        Successful        dN\n")
-    verboseLS && @printf("%4d %9.2e  %9.2e %9.2e %9.2e %9.2e %9.2e \n", iter,t,φt,dφt,ddφt,Δn,Δp);
+    verboseLS && @printf("  iter   t       φt        dφt        ddφt        Δn        Δp        Successful        dN        ratio\n")
+    verboseLS && @printf("%4d %9.2e  %9.2e %9.2e %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,ddφt,Δn,Δp);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
         if direction=="Nwt"
@@ -98,7 +104,7 @@ function TR_generic_ls(h :: AbstractLineFunction2,
             Δp = red*Δp
             Δn = red*Δn
             iter+=1
-            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,ddφt,Δn,Δp,0,dN);
+            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9e %9.2e %9e\n", iter,t,φt,dφt,ddφt,Δn,Δp,0,dN,ratio);
         else             # Successful
             if direction=="Nwt"
               # println("avant de recalculer t= $t d = $d ")
@@ -111,11 +117,18 @@ function TR_generic_ls(h :: AbstractLineFunction2,
             end
 
 
-            if ratio > eps2
+            if symetrique
+              if ratio > eps2
+                Δp = aug * Δp
+                Δn = aug * Δn
+              end
+            else
+              if ratio > eps2
                 Δp = aug * Δp
                 Δn = min(-t, aug * Δn)
-            else
+              else
                 Δn = min(-t, Δn)
+              end
             end
 
             admissible = (dφt>=ɛa) & (dφt<=ɛb)    # Wolfe, Armijo garanti par la
@@ -148,20 +161,19 @@ function TR_generic_ls(h :: AbstractLineFunction2,
               debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
             end
             iter+=1
-            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", iter,t,φt,dφt,ddφt,Δn,Δp,1,dN);
+
+            verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9e %9.2e  %9e\n", iter,t,φt,dφt,ddφt,Δn,Δp,1,dN, ratio);
         end;
         tired=iter>maxiterLS
     end;
-
-  #  println(" on est sortie")
-
-  #  println("t_original = $t_original")
 
     # recover h
     if !add_step
       ht = φt + h₀ + τ₀*t*g₀
     end
-    # dht = dφt + τ₀*g₀
+
+    t > 0.0 || (verboseLS && @show t dφt )
+    @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
     return (t, t_original, true, ht, iter, 0, tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 

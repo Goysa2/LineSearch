@@ -11,11 +11,16 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
                                maxiter :: Int=50,
                                verboseLS :: Bool=false,
                                check_param :: Bool = false,
-                               γ :: Float64=0.8,
+                               check_slope :: Bool = false,
+                               γ :: Float64 = 0.8,
                                kwargs...)
 
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
+    if check_slope
+      (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    end
 
     #Before starting the algorithm we vcheck to see if a step of 1.0 satisfies both the Wolfe and the Armijo condition
     ti=1.0
@@ -88,6 +93,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
     end
 
     ht= φti + h₀ + τ₀*ti*g₀
+    @assert (t > 0.0) && (!isnan(t)) "invalid step"
     return (ti,false,ht,iter,0,true, h.f_eval, h.g_eval, h.h_eval)
 
 end

@@ -1,4 +1,6 @@
 using LSDescentMethods
+using LineSearches
+using NLPModels, Optimize
 
 include("Armijo.jl")
 include("Wolfe.jl")
@@ -46,5 +48,5 @@ include("Other-LS/morethuente2.jl")
 include("Other-LS/hagerzhang2.jl")
 include("Other-LS/backtracking2.jl")
 
-#graohic tool
+#graphic tool
 include("graph_linefunc.jl")

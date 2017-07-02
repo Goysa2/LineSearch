@@ -9,17 +9,25 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
                    eps2 :: Float64 = 0.7,
                    red :: Float64 = 0.15,
                    aug :: Float64 = 10.0,
-                   α :: Float64 = 1.0,
-                   maxiter :: Int64=50,
+                   Δ :: Float64 = 1.0,
+                   maxiterLS :: Int64=50,
                    verboseLS :: Bool=false,
                    check_param :: Bool = false,
+                   check_slope :: Bool = false,
+                   add_step :: Bool = true,
+                   n_add_step :: Int64 = 0,
                    kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
-    (t,ht,gt,A_W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
+    if check_slope
+      (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    end
 
-    if A_W
+    (t,ht,gt,Ar,W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
+
+    if Ar && W
       return (t, t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
     end
 
@@ -28,43 +36,63 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     #gt=grad(h,t)
     dN=-gt #pour la premiere iteration
 
-    A=0.5
-    B=0.0
-
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
     # le reste de l'algo minimise la fonction φ...
     # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    φt = 0.0          # on sait que φ(0)=0
+    φt = φ(t)          # on sait que φ(0)=0
 
-    dφt = (1.0-τ₀)*g₀ # connu dφ(0)=(1.0-τ₀)*g₀
+    dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
     # Version avec la sécante: modèle quadratique
-    q(d)=φt + dφt*d + A*d^2 + B*d^3
+
+    if t == 0.0
+      A=0.5
+      B=0.0
+    elseif t == 1.0
+      φtprec = 0.0; dφtprec = (1.0-τ₀)*g₀
+      s = t - 0.0
+      y = dφt - dφtprec
+      a=-s
+      z= dφt + dφtprec + 3*(φt-φtprec)/a
+      discr = z^2-dφtprec*dφt
+      denom = dφt + dφtprec + 2*z
+      B= 1/3*(dφt+dφtprec+2*z)/(a*a)
+      A=-(dφt+z)/a
+    end
+
+    if Ar   #version 3
+      Δ = 100.0/abs(φt)
+    else
+      Δ = 1.0
+    end
+
+    Quad(d) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*Δ))*t^4
 
     t_original = NaN
 
-    # verboseLS && println("\n ɛa ",ɛa," ɛb ",ɛb," h(0) ", h₀," h₀' ",g₀)
+    verboseLS && println("ɛa = $ɛa ɛb = $ɛb")
+
     admissible = false
-    tired=iter>maxiter
-    verboseLS && @printf("   iter   t       φt        dφt        α        t+d      \n");
-    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t);
+    tired=iter>maxiterLS
+    verboseLS && @printf("   iter   t       φt        dφt        Δ        t+d      \n");
+    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t);
 
     while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
         #step computation
-        Quad(t) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*α))*t^4
-        #dQuad(t) = dφt+2*A*t+3*B*t^2+(1/α)*t^3
+        Quad(t) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*Δ))*t^4
+        #dQuad(t) = dφt+2*A*t+3*B*t^2+(1/Δ)*t^3
 
-        #p=Poly([dφt,2*A,3*B,(1/α)])
+        #p=Poly([dφt,2*A,3*B,(1/Δ)])
 
-        dR=roots([dφt,2*A,3*B,(1/α)])
+        dR_1=roots([dφt,2*A,3*B,(1/Δ)])
 
-        #dR = copy(dR_1)
+        dR = copy(dR_1)
 
         vmin=Inf
         for i=1:length(dR)
           rr=dR[i]
-          if isreal(rr)
+          if isfinite(rr) && (imag(rr) == 0.0)
             rr=real(rr)
             vact=Quad(rr)
             if rr*dφt<0
@@ -102,9 +130,9 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
         dφtprec = dφt;
         ratio = ared / pred
 
-        if ratio < eps1  # Unsuccessful
-            α=red*α
-            verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,α,t+d,φtestTR);
+        if (t + d < 0.0) && (ratio < eps1)  # Unsuccessful
+            Δ=red*Δ
+            verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t+d,φtestTR);
         else             # Successful
             t = t + d
 
@@ -122,19 +150,25 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
             A=-(dφt+z)/a
 
             if ratio > eps2
-                α=aug*α
+                Δ=aug*Δ
             end
             admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
                                                 # descente
 
-            verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,α);
+            if admissible && add_step && (n_add_step < 1)
+              n_add_step +=1
+              admissible = false
+            end
+
+            verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,Δ);
         end;
         iter=iter+1
-        tired=iter>maxiter
+        tired=iter>maxiterLS
     end;
 
     # recover h
     ht = φt + h₀ + τ₀*t*g₀
+    @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
     return (t,t_original,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 

@@ -8,9 +8,17 @@ function Biss_ls(h :: AbstractLineFunction2,
                  maxiter :: Int=50,
                  verboseLS :: Bool=false,
                  check_param :: Bool = false,
+                 check_slope :: Bool = false,
+                 add_step :: Bool = true,
+                 n_add_step :: Int64 = 0,
                  kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
+    if check_slope
+      (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    end
+
 
     t = 1.0
     ht = obj(h,t)
@@ -20,7 +28,7 @@ function Biss_ls(h :: AbstractLineFunction2,
     end
 
 
-    (ta,tb)=trouve_intervalle_ls(h,h₀,g₀,g)
+    (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g; kwargs...)
     #println("a la sorti de trouve_intervalle_ls ta=",ta," tb=",tb)
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
@@ -55,16 +63,17 @@ function Biss_ls(h :: AbstractLineFunction2,
       admissible = (dφp>=ɛa) & (dφp<=ɛb)
       tired=iter>maxiter
 
-      if admissible
-        t_original = copy(tp)
-        tp=(ta+tb)/2
-        ht = obj(h,t)
-        dht = grad!(h,t,g)
+      if admissible && add_step && (n_add_step < 1)
+        n_add_step +=1
+        admissible = false
       end
 
       verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e\n", iter,ta,tb,tp,dφp);
     end;
 
-    #ht = φ(tp) + h₀ + τ₀*tp*g₀
-    return (tp, t_original, false, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
+    ht = φ(t) + h₀ + τ₀*t*g₀
+
+    @assert (t > 0.0) && (!isnan(t)) "invalid step"
+
+    return (tp, t_original, true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
 end

@@ -18,6 +18,8 @@ function graph_linefunc(h :: AbstractLineFunction2,
                         kwargs...)
 
   #PyPlot.clf()               #clear the existing figure...
+  # println("dans graph_linefunc")
+  # @show h₀ g₀ obj(h, 0.0) grad(h, 0.0)
 
   x_axis = []
   y_axis = []
@@ -32,7 +34,7 @@ function graph_linefunc(h :: AbstractLineFunction2,
   x = PyPlot.linspace(a, b,200)
   y = (τ₀*g₀)*x + h₀                       #armijo condition
 
-  PyPlot.figure(3)
+  PyPlot.figure(1)
   PyPlot.plot(x,y)                                      #we "put" the armijo condition in the graph
   PyPlot.scatter(x_axis,y_axis, color = color, s = 10.0) #we put the "shape" of h in the graph
 

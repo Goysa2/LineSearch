@@ -3,16 +3,24 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
                      h₀ :: Float64,
                      g₀ :: Float64,
                      g :: Array{Float64,1};
-                     γ :: Float64=0.55,
+                     γ :: Float64=0.8,
                      τ₀ :: Float64=1.0e-4,
                      τ₁ :: Float64=0.9999,
                      maxiter :: Int=100,
                      verboseLS :: Bool=false,
                      check_param :: Bool = false,
+                     check_slope :: Bool = false,
                      debug :: Bool = false,
+                     add_step :: Bool = true,
+                     n_add_step :: Int64 = 0,
                      kwargs...)
 
-  (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
+ (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
+
+ if check_slope
+   (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+   verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+ end
 
  t = 1.0
  ht = obj(h,t)
@@ -23,18 +31,16 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
 
  #println("au début de Biss_Cub_ls g₀=",g₀)
 
- (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g)
+ (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g; kwargs...)
 
  #println("on est après le trouve_intervalle_ls")
-
- γ=0.8
  t=tb
  tp=ta
  tqnp=ta
  iter=0
 
  φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
- dφ(t) = grad(h,t) - τ₀*g₀    # dérivée
+ dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
  #println("ta=",ta," tb=",tb)
  #println("dφa=",dφ(ta)," dφb=",dφ(tb))
@@ -81,12 +87,12 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
 
    if ((tp-t)*dN>0) & (dN/(tp-t)<γ)
      tplus = t + dN
-     φplus = obj(h, tplus)
+     φplus = φ(tplus)
      dφplus= dφ(tplus)
      verboseLS && println("N")
    else
      tplus = (t+tp)/2
-     φplus = obj(h, tplus)
+     φplus = φ(tplus)
      dφplus = dφ(tplus)
      verboseLS && println("B")
    end
@@ -119,31 +125,10 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
    iter=iter+1
    admissible = (dφt>=ɛa) & (dφt<=ɛb)
 
-   if admissible
+   if admissible && add_step && (n_add_step < 1)
      t_original = copy(t)
-     dht = dφt + τ₀ * g₀
-     #ddht = ddφ(t)
-     s=t-tqnp
-     y=dφt-dφtm1
-
-     α=-s
-     z=dφt+dφtm1+3*(φt-φtm1)/α
-     discr=z^2-dφt*dφtm1
-     denom=dφt+dφtm1+2*z
-     if (discr>0) & (abs(denom)>eps(Float64))
-       #si on peut on utilise l'interpolation cubique
-       w=sqrt(discr)
-       dN=-s*(dφt+z+sign(α)*w)/(denom)
-     else #on se rabat sur une étape de sécante
-       dN=-dφt*s/y
-     end
-     tprec= copy(t)
-     t = t + dN
-     ht = obj(h,t)
-     dht = grad!(h,t,g)
-     verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
-     verboseLS && (dφt = grad(h,t) - τ₀ * g₀)
-     #verboseLS && (ddφt = hess(h,t))
+     n_add_step +=1
+     admissible = false
    end
 
    tired=iter>maxiter
@@ -154,6 +139,10 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
    verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
  end
 
- #ht = φ(t) + h₀ + τ₀*t*g₀
- return (t, t_original,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
+
+ ht = φ(t) + h₀ + τ₀*t*g₀
+
+ @assert (t > 0.0) && (!isnan(t)) "invalid step"
+
+ return (t, t_original, true,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
 end
