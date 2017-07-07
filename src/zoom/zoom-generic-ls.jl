@@ -3,7 +3,9 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
                          h₀ :: Float64,
                          g₀ :: Float64,
                          t₀ :: Float64,
-                         t₁ :: Float64;
+                         t₁ :: Float64,
+                         ɛa :: Float64,
+                         ɛb :: Float64;
                          τ₀ :: Float64=1.0e-4,
                          τ₁ :: Float64=0.9,
                          ϵ :: Float64=1e-5,
@@ -43,7 +45,13 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
   #Depending and the Interpolation, different information are needed
   #Some are probably superfluous, but doesn't affect the number of iterations or function evalutions
   #The idea is same for all Interpolations: Keep track of the current point ti, the previous point tp and the previous quasi-newton point tqnp
-  if direction=="Nwt" || direction=="Sec" || direction=="SecA" || direction=="Cub"
+  if direction=="Nwt"
+    if tlow<thi
+      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tlow,direction,γ)#,verboseLS=verboseLS)
+    else
+      (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,thi,tlow,φlow,dφlow,φhi,dφhi,thi,direction,γ)#,verboseLS=verboseLS)
+    end
+  elseif direction == "Sec" || direction == "SecA" || direction == "Cub"
     if tlow<thi
       (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)=zoom_qn_interpolation(φ,dφ,dφ,tlow,thi,φhi,dφhi,φlow,dφlow,tlow,direction,γ)#,verboseLS=verboseLS)
     else
@@ -58,8 +66,8 @@ function zoom_generic_ls(h :: AbstractLineFunction2,
   iter=0
 
   #For the same reasons as before, the strong wolfe conditions for φ is (τ₁-τ₀)*h'(0)<= φ'(t)<=-(τ₁+τ₀)*h'(0)
-  ɛa = (τ₁-τ₀)*g₀
-  ɛb = -(τ₁+τ₀)*g₀
+  # ɛa = (τ₁-τ₀)*g₀
+  # ɛb = -(τ₁+τ₀)*g₀
 
   #verboseLS && println("ɛa=",ɛa," ɛb=",ɛb)
 

@@ -13,6 +13,7 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
                      debug :: Bool = false,
                      add_step :: Bool = true,
                      n_add_step :: Int64 = 0,
+                     weak_wolfe :: Bool = false,
                      kwargs...)
 
  (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -58,6 +59,9 @@ function Biss_Cub_ls(h :: AbstractLineFunction2,
 
  ɛa = (τ₁-τ₀)*g₀
  ɛb = -(τ₁+τ₀)*g₀
+ if weak_wolfe
+   ɛb = Inf
+ end
  admissible = ((dφt>=ɛa) & (dφt<=ɛb))
  tired =  iter > maxiter
  t_original = NaN

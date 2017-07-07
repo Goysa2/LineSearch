@@ -18,6 +18,7 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
                         add_step :: Bool = true,
                         n_add_step :: Int64 = 0,
                         debug :: Bool = false,
+                        weak_wolfe :: Bool = false,
                         kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different parameters"))
@@ -27,9 +28,10 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
       verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
     end
 
-    #println("on rentre dans ARC τ₀ = $τ₀ τ₁ = $τ₁")
-
     (t,ht,gt,A,W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
+    if weak_wolfe
+      ɛb = Inf
+    end
 
     if A && W
       return (t,copy(t), true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
@@ -66,9 +68,13 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
     if A   #version 3
       Δ = 100.0/abs(φt)
     else
-      Δ = 1.0/abs(dersec)
+      if t == 1.0
+        seck = Sec_computation_ls(t, 0.0, (1.0 - τ₀) * g₀, 1.0, φt,dφt)[4]
+        Δ = 1.0/abs(seck)
+      else
+        Δ = 1.0/abs(1000.0)
+      end
     end
-
     verboseLS && println("   ϵₐ = $ɛa ϵᵦ = $ɛb")
 
 
@@ -92,6 +98,8 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
 
         φtestTR = φ(t+d)
         dφtestTR= dφ(t+d)
+
+        verboseLS && @show t, d, φtestTR, dφtestTR
 
         # test d'arrêt sur dφ
         if direction=="Nwt"
@@ -121,11 +129,13 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
         else             # Successful
 
           if direction=="Nwt"
-            (t,φt,dφt,ddφt)=Nwt_computation_ls(t, d , φtestTR, dφtestTR, h)
+            (t,φt,dφt,ddφt) = Nwt_computation_ls(t, d , φtestTR, dφtestTR, h)
           elseif direction=="Sec"
-            (t,φt,dφt,seck)=Sec_computation_ls(t, tprec, dφtprec, d, φtestTR,dφtestTR)
+            verboseLS && @show (t, tprec, dφtprec, d, φtestTR,dφtestTR)
+            (t,φt,dφt,seck) = Sec_computation_ls(t, tprec, dφtprec, d, φtestTR,dφtestTR)
+            verboseLS && @show (t,φt,dφt,seck)
           elseif direction=="SecA"
-            (t,φt,dφt,seck)=SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR,dφtestTR)
+            (t,φt,dφt,seck) = SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR,dφtestTR)
           end
 
           if ratio > eps2
@@ -145,6 +155,7 @@ function ARC_generic_ls(h :: AbstractLineFunction2,
           iter += 1
           tired = iter > maxiterLS
 
+          verboseLS && @show t d
           verboseLS && @printf("%4d %9.2e %9.2e  %9.2e  %9.2e  %9.2e  %9.2e %7.2e \n", iter,t,φt,dφt,ddφt,Δ,1,d);
         end;
     end;

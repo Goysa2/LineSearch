@@ -1,20 +1,20 @@
 export zoom_qn_interpolation
 function zoom_qn_interpolation(φ::Function,
-                            dφ::Function,
-                            ddφ::Function,
-                            tp :: Float64,
-                            ti :: Float64,
-                            φti :: Float64,
-                            dφti :: Float64,
-                            φtm1 :: Float64,
-                            dφtm1 :: Float64,
-                            tqnp :: Float64,
-                            methode :: String,
-                            γ :: Float64;
-                            verbose :: Bool=false,
-                            kwargs...)
+                               dφ::Function,
+                               ddφ::Function,
+                               tp :: Float64,
+                               ti :: Float64,
+                               φti :: Float64,
+                               dφti :: Float64,
+                               φtm1 :: Float64,
+                               dφtm1 :: Float64,
+                               tqnp :: Float64,
+                               methode :: String,
+                               γ :: Float64;
+                               verbose :: Bool=false,
+                               kwargs...)
 
-  #print_with_color(:yellow,"on est dans zoom_qn_interpolation")
+  # @show φ dφ ddφ tp ti φti dφti φtm1 dφtm1 tqnp methode γ
 
   if methode=="Nwt"
     ddφti=ddφ(ti)
@@ -51,8 +51,11 @@ function zoom_qn_interpolation(φ::Function,
 
   if ((tp-ti)*dN>0) & (dN/(tp-ti)<γ)
     tplus = ti + dN
+    println("dans le shit tplus = $tplus")
     φplus = φ(tplus)
+    println("dans le shit φplus = $φplus")
     dφplus = dφ(tplus)
+    println("dans le shit dφplus = $dφplus")
     verbose && println("N")
   else
     tplus = (ti+tp)/2
@@ -85,6 +88,9 @@ function zoom_qn_interpolation(φ::Function,
   dφtm1=dφti
   φti=φplus
   dφti=dφplus
+
+  # print_with_color(:green,"à la sortie de zoom \n")
+  # @show ti tp tqnp tplus φtm1 dφtm1 φti dφti
 
   return (ti,tp,tqnp,tplus,φtm1,dφtm1,φti,dφti)
 end

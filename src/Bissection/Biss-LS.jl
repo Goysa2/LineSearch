@@ -11,6 +11,7 @@ function Biss_ls(h :: AbstractLineFunction2,
                  check_slope :: Bool = false,
                  add_step :: Bool = true,
                  n_add_step :: Int64 = 0,
+                 weak_wolfe :: Bool = false,
                  kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -40,6 +41,9 @@ function Biss_ls(h :: AbstractLineFunction2,
     # test d'arrêt sur dφ
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
+    if weak_wolfe
+      ɛb = Inf
+    end
 
     admissible = false
     t_original = NaN

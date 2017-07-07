@@ -13,6 +13,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
                                check_param :: Bool = false,
                                check_slope :: Bool = false,
                                γ :: Float64 = 0.8,
+                               weak_wolfe :: Bool = false,
                                kwargs...)
 
 
@@ -51,6 +52,9 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
     #With φ the strong Wolfe condition is (τ₁-τ₀)*h'(0)<= φ'(t)<=-(τ₁+τ₀)*h'(0)
     ɛa = (τ₁-τ₀)*g₀
     ɛb = -(τ₁+τ₀)*g₀
+    if weak_wolfe
+      ɛb = Inf
+    end
 
     verboseLS && @printf("iter tim1        dφtim1        φtim1         ti        dφti        φti\n")
     verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, tim1,dφtim1,φtim1,ti,dφti,φti)
@@ -60,7 +64,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (iter>1))
         #print_with_color(:green,"on rentre dans le premier zoom \n")
-        (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,direction=direction, γ=γ, τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
+        (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,ɛa,ɛb,direction=direction, γ=γ, τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
         return (topt,good_grad,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
       end
 
@@ -75,7 +79,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
 
       if (dφti>= -t₀*h₀)
         #print_with_color(:green,"on rentre dans le deuxième zoom \n")
-        (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,direction=direction, γ=γ,τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
+        (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,ɛa,ɛb,direction=direction, γ=γ,τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
         return (topt,good_grad,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
       end
 

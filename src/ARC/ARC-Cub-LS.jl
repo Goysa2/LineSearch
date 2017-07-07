@@ -3,19 +3,21 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
+                   eps1 :: Float64 = 0.25,
+                   eps2 :: Float64 = 0.75,
+                   red :: Float64 = 0.5,
+                   aug :: Float64 = 5.0,
+                   Δ :: Float64 = 1.0,
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   eps1 :: Float64 = 0.1,
-                   eps2 :: Float64 = 0.7,
-                   red :: Float64 = 0.15,
-                   aug :: Float64 = 10.0,
-                   Δ :: Float64 = 1.0,
                    maxiterLS :: Int64=50,
                    verboseLS :: Bool=false,
                    check_param :: Bool = false,
                    check_slope :: Bool = false,
                    add_step :: Bool = true,
                    n_add_step :: Int64 = 0,
+                   debug :: Bool = false,
+                   weak_wolfe :: Bool = false,
                    kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -26,6 +28,10 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     end
 
     (t,ht,gt,Ar,W,ɛa,ɛb)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
+
+    if weak_wolfe
+      ɛb = Inf
+    end
 
     if Ar && W
       return (t, t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
@@ -64,7 +70,11 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
     if Ar   #version 3
       Δ = 100.0/abs(φt)
     else
-      Δ = 1.0
+      if t == 1.0
+        Δ = 1.0/abs(dφt)
+      else
+        Δ = 1.0/abs(1000.0)
+      end
     end
 
     Quad(d) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*Δ))*t^4
@@ -75,6 +85,10 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
 
     admissible = false
     tired=iter>maxiterLS
+
+    debug && PyPlot.figure(1)
+    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+
     verboseLS && @printf("   iter   t       φt        dφt        Δ        t+d      \n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t);
 
@@ -92,7 +106,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
         vmin=Inf
         for i=1:length(dR)
           rr=dR[i]
-          if isfinite(rr) && (imag(rr) == 0.0)
+          if isfinite(rr) && (imag(rr) < 1e-8)
             rr=real(rr)
             vact=Quad(rr)
             if rr*dφt<0
@@ -117,7 +131,7 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
         dφtestTR= dφ(t+d)
         # test d'arrêt sur dφ
 
-        pred = dφt*d + A*d^2 + B*d^3
+        pred = dφt * d + A * d^2 + B * d^3
         #assert(pred<0)   # How to recover? As is, it seems to work...
         if pred >-1e-10
           ared=(dφt+dφtestTR)*d/2
@@ -132,6 +146,8 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
 
         if (t + d < 0.0) && (ratio < eps1)  # Unsuccessful
             Δ=red*Δ
+            iter=iter+1
+            tired=iter>maxiterLS
             verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t+d,φtestTR);
         else             # Successful
             t = t + d
@@ -160,10 +176,12 @@ function ARC_Cub_ls(h :: AbstractLineFunction2,
               admissible = false
             end
 
+            debug && PyPlot.figure(1)
+            debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+            iter=iter+1
+            tired=iter>maxiterLS
             verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,Δ);
         end;
-        iter=iter+1
-        tired=iter>maxiterLS
     end;
 
     # recover h

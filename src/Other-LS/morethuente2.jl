@@ -270,13 +270,13 @@ function _morethuente2!{T}(h::C1LineFunction2,
         # if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's τ₁
         #     return stp
         # end
-        if isapprox(norm(grad(df,x_new)), 0) # TODO: this should be tested vs Optim's τ₁
-            return stp
+        if isapprox(norm(grad!(df,x_new,∇ft)), 0) # TODO: this should be tested vs Optim's τ₁
+            return stp, stp, true, NaN, NaN, false
         end
 
         nfev += 1 # This includes calls to f() and g!()
         #dg = vecdot(NLSolversBase.gradient(df), s)
-        dg = vecdot(grad(df,x_new),s)
+        dg = vecdot(grad!(df,x_new,∇ft),s)
         push!(lsr, stp, f, dg)
         ftest1 = finit + stp * dgtest
 
@@ -310,7 +310,7 @@ function _morethuente2!{T}(h::C1LineFunction2,
         #
 
         if info != 0
-            return stp
+            return stp, stp, true, NaN, NaN, false
         end
 
         #

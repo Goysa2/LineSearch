@@ -17,6 +17,7 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
                    add_step :: Bool = true,
                    n_add_step :: Int64 = 0,
                    check_slope :: Bool = false,
+                   weak_wolfe :: Bool = false,
                    kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -26,6 +27,9 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
     end
 
     (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁;kwargs...)
+    if weak_wolfe
+      ɛb = Inf
+    end
 
     if A_W
       return (t, t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
