@@ -23,7 +23,7 @@ export _backtracking2!
 
 T = Float64
 
-function _backtracking2!{T}(h::C1LineFunction2,
+function _backtracking2!{T}(h::LineModel,
                             f::Real,
                             slope::Real,
                             ∇ft::Array{T,1};

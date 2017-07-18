@@ -1,5 +1,5 @@
 export ARC_Cub_ls
-function ARC_Cub_ls(h :: AbstractLineFunction2,
+function ARC_Cub_ls(h :: LineModel,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};

@@ -1,5 +1,5 @@
 export zoom_nwt_ls
-function zoom_nwt_ls(h :: AbstractLineFunction2,
+function zoom_nwt_ls(h :: LineModel,
                  h₀ :: Float64,
                  g₀ :: Float64,
                  g :: Array{Float64,1};

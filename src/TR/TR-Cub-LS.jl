@@ -1,5 +1,5 @@
 export TR_Cub_ls
-function TR_Cub_ls(h :: AbstractLineFunction2,
+function TR_Cub_ls(h :: LineModel,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
@@ -46,9 +46,15 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
 
     # le reste de l'algo minimise la fonction φ...
     # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    φt = φ(t)          # on sait que φ(0)=0
+    # φt = φ(t)          # on sait que φ(0)=0
+    # dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
+    φt = ht - h₀ - τ₀*t*g₀
+    dφt = gt - τ₀*g₀
+    if t == 0.0
+        φt = 0.0
+        dφt = (1 - τ₀)*g₀
+    end
 
-    dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
 
     if t == 0.0
       A=0.5
@@ -186,6 +192,6 @@ function TR_Cub_ls(h :: AbstractLineFunction2,
 
     t > 0.0 || (verboseLS && @show t dφt )
     @assert (t > 0.0) && (!isnan(t)) "invalid step"
-    return (t, t_original,true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)   #pourquoi le true et le 0?
+    return (t, t_original,true, ht, iter,0,tired)#, h.f_eval, h.g_eval, h.h_eval)   #pourquoi le true et le 0?
 
 end

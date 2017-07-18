@@ -150,7 +150,7 @@ export _morethuente2!, csttep2
 
 T = Float64
 
-function _morethuente2!{T}(h::C1LineFunction2,
+function _morethuente2!{T}(h::LineModel,
                            f::Real,
                            slope::Real,
                            ∇ft::Array{T,1};

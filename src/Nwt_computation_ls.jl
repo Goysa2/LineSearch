@@ -3,7 +3,7 @@ function Nwt_computation_ls(t::Float64,
                             d::Float64,
                             φtestTR::Float64,
                             dφtestTR::Float64,
-                            h::AbstractLineFunction2)
+                            h::LineModel)
   t = t + d
 
   φt = φtestTR

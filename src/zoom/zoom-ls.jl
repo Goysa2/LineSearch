@@ -1,5 +1,5 @@
 export zoom_ls
-function zoom_ls(h :: AbstractLineFunction2,
+function zoom_ls(h :: LineModel,
                  h₀ :: Float64,
                  g₀ :: Float64,
                  g :: Array{Float64,1};

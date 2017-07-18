@@ -23,7 +23,7 @@ export _strongwolfe2!, zoom2, interpolate2
 
 T = Float64
 
-function _strongwolfe2!{T}(h::C1LineFunction2,
+function _strongwolfe2!{T}(h::LineModel,
                            f::Real,
                            slope::Real,
                            ∇ft::Array{T,1};

@@ -83,7 +83,7 @@ const DEFAULTSIGMA = 0.9
 T = Float64
 
 
-function _hagerzhang2!{T}(h::C1LineFunction2,
+function _hagerzhang2!{T}(h::LineModel,
                           f::Real,
                           slope::Real,
                           ∇ft::Array{T,1};

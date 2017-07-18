@@ -1,5 +1,5 @@
 export Biss_ls
-function Biss_ls(h :: AbstractLineFunction2,
+function Biss_ls(h :: LineModel,
                  h₀ :: Float64,
                  g₀ :: Float64,
                  g :: Array{Float64,1};

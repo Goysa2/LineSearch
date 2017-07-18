@@ -1,5 +1,5 @@
 export init_ARC
-function init_ARC(h :: AbstractLineFunction2,
+function init_ARC(h :: LineModel,
                  h₀ :: Float64,
                  g₀ :: Float64,
                  g :: Array{Float64,1},

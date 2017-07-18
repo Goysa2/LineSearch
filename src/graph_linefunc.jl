@@ -5,7 +5,7 @@ export graph_linefunc
 #Useful for debugging because it can help to visualize in a particular iteration
 #But costs a lot of function evaluation so might need improvement
 
-function graph_linefunc(h :: AbstractLineFunction2,
+function graph_linefunc(h :: LineModel,
                         h₀ :: Float64,
                         g₀ :: Float64;
                         τ₀ :: Float64 = 1e-4,
