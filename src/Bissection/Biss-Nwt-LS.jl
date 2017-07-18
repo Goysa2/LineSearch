@@ -27,7 +27,7 @@ function Biss_Nwt_ls(h :: LineModel,
   gt = grad!(h, t, g)
   Ar = Armijo(t, ht, gt, h₀, g₀, τ₀); Wo = Wolfe(gt, g₀, τ₁)
   if Ar && Wo
-    return (t,t, false, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
+    return (t,t, false, ht, 0, 0, false)
   end
 
   (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g, verboseLS = verboseLS, debug = debug; kwargs...)
@@ -128,6 +128,6 @@ function Biss_Nwt_ls(h :: LineModel,
 
    @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
-   return (t,t_original,false,ht,iter,0,tired, h.f_eval, h.g_eval, h.h_eval)
+   return (t,t_original,false,ht,iter,0,tired)
 
 end

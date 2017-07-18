@@ -5,8 +5,8 @@ function ARC_SecA_ls(h :: LineModel,
                    g :: Array{Float64,1};
                    kwargs...)
 
-    (t, t_original, good_grad, ht,iter,zero,stalled_linesearch,h_f,h_g,h_h)=ARC_generic_ls(h,h₀,g₀,g,direction="SecA";kwargs...)
+    (t, t_original, good_grad, ht,iter,zero,stalled_linesearch)=ARC_generic_ls(h,h₀,g₀,g,direction="SecA";kwargs...)
 
-    return (t, t_original, good_grad, ht,iter,zero,stalled_linesearch,h_f,h_g,h_h) #pourquoi le true et le 0?
+    return (t, t_original, good_grad, ht,iter,zero,stalled_linesearch) #pourquoi le true et le 0?
 
 end

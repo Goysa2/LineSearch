@@ -25,7 +25,7 @@ function Biss_ls(h :: LineModel,
     ht = obj(h,t)
     gt = grad!(h, t, g)
     if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-      return (t, t, true, ht, 0, 0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t, t, true, ht, 0, 0, false)
     end
 
 
@@ -79,5 +79,5 @@ function Biss_ls(h :: LineModel,
 
     @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
-    return (tp, t_original, true, ht, iter,0,tired, h.f_eval, h.g_eval, h.h_eval)  #pourquoi le true et le 0?
+    return (tp, t_original, true, ht, iter,0,tired)  #pourquoi le true et le 0?
 end

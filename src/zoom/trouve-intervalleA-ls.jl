@@ -28,7 +28,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
     ht = obj(h,ti)
     gt = grad!(h, ti, g)
     if Armijo(ti,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (ti,true,ht,0,0,false, h.f_eval, h.g_eval, h.h_eval)
+        return (ti,true,ht,0,0,false)
     end
 
     #We redefine our h function into the φ function.
@@ -65,7 +65,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
       if (φti>0.0) | ((φti>φtim1) & (iter>1))
         #print_with_color(:green,"on rentre dans le premier zoom \n")
         (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,ɛa,ɛb,direction=direction, γ=γ, τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
-        return (topt,good_grad,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
+        return (topt,good_grad,ht,iter,0,false)
       end
 
       dφti=dφ(ti)
@@ -74,13 +74,13 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
         #print_with_color(:green,"on résoud sans rentré dans zoom \n")
         topt=ti
         ht= φti + h₀ + τ₀*ti*g₀
-        return (topt,false,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
+        return (topt,false,ht,iter,0,false)
       end
 
       if (dφti>= -t₀*h₀)
         #print_with_color(:green,"on rentre dans le deuxième zoom \n")
         (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,ɛa,ɛb,direction=direction, γ=γ,τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
-        return (topt,good_grad,ht,iter,0,false, h.f_eval, h.g_eval, h.h_eval)
+        return (topt,good_grad,ht,iter,0,false)
       end
 
       #The current step t becomes the former step t
@@ -98,6 +98,6 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
 
     ht= φti + h₀ + τ₀*ti*g₀
     @assert (t > 0.0) && (!isnan(t)) "invalid step"
-    return (ti,false,ht,iter,0,true, h.f_eval, h.g_eval, h.h_eval)
+    return (ti,false,ht,iter,0,true)
 
 end

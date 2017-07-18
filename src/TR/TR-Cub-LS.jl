@@ -32,7 +32,7 @@ function TR_Cub_ls(h :: LineModel,
     end
 
     if A_W
-      return (t, t, true, ht, 0.0, 0.0, false, h.f_eval, h.g_eval, h.h_eval)
+      return (t, t, true, ht, 0.0, 0.0, false)
     end
 
     t_original = NaN
@@ -192,6 +192,6 @@ function TR_Cub_ls(h :: LineModel,
 
     t > 0.0 || (verboseLS && @show t dφt )
     @assert (t > 0.0) && (!isnan(t)) "invalid step"
-    return (t, t_original,true, ht, iter,0,tired)#, h.f_eval, h.g_eval, h.h_eval)   #pourquoi le true et le 0?
+    return (t, t_original,true, ht, iter,0,tired)#)   #pourquoi le true et le 0?
 
 end
