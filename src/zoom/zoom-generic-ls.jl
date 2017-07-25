@@ -4,11 +4,9 @@ function zoom_generic_ls(h :: LineModel,
                          g₀ :: Float64,
                          t₀ :: Float64,
                          t₁ :: Float64,
-                         ɛa :: Float64,
-                         ɛb :: Float64;
+                         stp_ls :: TStopping_LS;
                          τ₀ :: Float64=1.0e-4,
                          τ₁ :: Float64=0.9,
-                         ϵ :: Float64=1e-5,
                          maxiter_zoom :: Int=50,
                          verboseLS :: Bool=false,
                          direction :: String="Nwt",
@@ -16,7 +14,7 @@ function zoom_generic_ls(h :: LineModel,
                          kwargs...)
 
 
-  #Definition of the φ function as defined in the trouve_intervalleA_ls algorithm
+  #Definition of the φ function as defined in the find_intervalA_ls algorithm
   φ(ti) = obj(h,ti) - h₀ - τ₀*ti*g₀  # fonction et
   dφ(ti) = grad(h,ti) - τ₀*g₀    # dérivée
 
@@ -71,7 +69,7 @@ function zoom_generic_ls(h :: LineModel,
 
   #verboseLS && println("ɛa=",ɛa," ɛb=",ɛb)
 
-  tired= iter > maxiter_zoom
+  admissible, tired = stop_ls(stp_ls, dφti, iter; kwargs...)
 
   verboseLS && @printf(" iter        tlow        thi         ti        φlow       φhi         φt         dφt\n")
   verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
@@ -99,7 +97,7 @@ function zoom_generic_ls(h :: LineModel,
         dφti=dφ(ti)
       end
 
-      if ((dφti>=ɛa) & (dφti<=ɛb))
+      if ((dφti>=stp_ls.ɛa) & (dφti<=stp_ls.ɛb))
         topt=ti
         ht = φti + h₀ + τ₀*ti*g₀
         return (topt,false,ht,iter)
@@ -142,7 +140,7 @@ function zoom_generic_ls(h :: LineModel,
     end
 
     iter+=1
-    tired = iter >= maxiter_zoom
+    admissible, tired = stop_ls(stp_ls, dφti, iter; kwargs...)
     verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e %7.2e %7.2e %7.2e\n", iter,tlow,thi,ti,φlow,φhi,φti,dφti)
     verboseLS && println("  ")
   end

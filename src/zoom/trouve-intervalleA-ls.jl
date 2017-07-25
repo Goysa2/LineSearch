@@ -1,25 +1,25 @@
-export trouve_intervalleA_ls
-function trouve_intervalleA_ls(h :: AbstractLineFunction2,
+export find_intervalA_ls
+function find_intervalA_ls(h :: LineModel,
                                h₀ :: Float64,
                                g₀ :: Float64,
                                g :: Array{Float64,1};
+                               stp_ls :: TStopping_LS = TStopping_LS(),
                                direction :: String="Nwt",
                                τ₀ :: Float64=1.0e-4,
                                τ₁ :: Float64=0.9,
                                t₀ :: Float64=0.0,
                                tmax :: Float64=1000.0,
-                               maxiter :: Int=50,
+                               γ :: Float64 = 0.8,
                                verboseLS :: Bool=false,
                                check_param :: Bool = false,
                                check_slope :: Bool = false,
-                               γ :: Float64 = 0.8,
                                weak_wolfe :: Bool = false,
                                kwargs...)
 
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
     if check_slope
-      (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+      (abs(g₀ - grad(h, 0.0)) < 1e-4) || error("wrong slope")
       verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
     end
 
@@ -35,6 +35,8 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
+    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+
     tim1=t₀
     #ti=(tim1+tmax)/2
     ti=1.0
@@ -48,29 +50,23 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
     φti=NaN
     dφti=NaN
 
-    #With the h function the strong wolfe condition is: |h'(t)|<=-τ₁h'(0)
-    #With φ the strong Wolfe condition is (τ₁-τ₀)*h'(0)<= φ'(t)<=-(τ₁+τ₀)*h'(0)
-    ɛa = (τ₁-τ₀)*g₀
-    ɛb = -(τ₁+τ₀)*g₀
-    if weak_wolfe
-      ɛb = Inf
-    end
+    admissible, tired = stop_ls(stp_ls, dφti, iter; kwargs...)
 
     verboseLS && @printf("iter tim1        dφtim1        φtim1         ti        dφti        φti\n")
     verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, tim1,dφtim1,φtim1,ti,dφti,φti)
 
-    while (iter<maxiter) & (ti<=tmax)
+    while !(admissible | tired)
       #Implementation of the 3.5 Linesearch ALgorithm as presented by Nocedal & Wright
       φti=φ(ti)
       if (φti>0.0) | ((φti>φtim1) & (iter>1))
         #print_with_color(:green,"on rentre dans le premier zoom \n")
-        (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,ɛa,ɛb,direction=direction, γ=γ, τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
+        (topt,good_grad,ht,i)=zoom_generic_ls(h,h₀,g₀,tim1,ti,stp_ls,direction=direction, γ=γ, τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
         return (topt,good_grad,ht,iter,0,false)
       end
 
       dφti=dφ(ti)
 
-      if ((dφti>=ɛa) & (dφti<=ɛb))
+      if ((dφti>=stp_ls.ɛa) & (dφti<=stp_ls.ɛb))
         #print_with_color(:green,"on résoud sans rentré dans zoom \n")
         topt=ti
         ht= φti + h₀ + τ₀*ti*g₀
@@ -79,7 +75,7 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
 
       if (dφti>= -t₀*h₀)
         #print_with_color(:green,"on rentre dans le deuxième zoom \n")
-        (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,ɛa,ɛb,direction=direction, γ=γ,τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
+        (topt,good_grad,ht,iter)=zoom_generic_ls(h,h₀,g₀,ti,tim1,stp_ls,direction=direction, γ=γ,τ₀ = τ₀, τ₁ = τ₁, verboseLS=verboseLS)
         return (topt,good_grad,ht,iter,0,false)
       end
 
@@ -92,12 +88,12 @@ function trouve_intervalleA_ls(h :: AbstractLineFunction2,
       ti*=2.0
       #ti=(tim1+tmax)/2
 
-      iter=iter+1
+      admissible, tired = stop_ls(stp_ls, dφti, iter; kwargs...)
       verboseLS && @printf("%4d %7.2e %7.2e  %7.2e  %7.2e  %7.2e  %7.2e \n", iter, tim1,dφtim1,φtim1,ti,dφti,φti)
     end
 
     ht= φti + h₀ + τ₀*ti*g₀
-    @assert (t > 0.0) && (!isnan(t)) "invalid step"
+    @assert (ti > 0.0) && (!isnan(ti)) "invalid step"
     return (ti,false,ht,iter,0,true)
 
 end

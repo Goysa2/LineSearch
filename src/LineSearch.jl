@@ -4,10 +4,10 @@ export Newton_linesearch
 
 using JuMP, NLPModels, Optimize
 using PolynomialRoots
-using ScalarOptimizationProblems
+# using ScalarOptimizationProblems
 using ScalarSolvers
 
-using LSDescentMethods
+using LSDescentMethods, Stopping
 
 include("includes.jl")
 

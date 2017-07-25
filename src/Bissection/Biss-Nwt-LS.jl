@@ -6,7 +6,7 @@ function Biss_Nwt_ls(h :: LineModel,
                      γ :: Float64=0.8,
                      τ₀ :: Float64=1.0e-4,
                      τ₁ :: Float64=0.9999,
-                     maxiterLS :: Int=50,
+                     stp_ls :: TStopping_LS = TStopping_LS(),
                      verboseLS :: Bool=false,
                      check_param :: Bool = false,
                      debug :: Bool = false,
@@ -30,7 +30,7 @@ function Biss_Nwt_ls(h :: LineModel,
     return (t,t, false, ht, 0, 0, false)
   end
 
-  (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g, verboseLS = verboseLS, debug = debug; kwargs...)
+  (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h,h₀,g₀,g, verboseLS = verboseLS, debug = debug; kwargs...)
   verboseLS && println("ta = $ta tb = $tb")
 
    t=ta
@@ -48,16 +48,11 @@ function Biss_Nwt_ls(h :: LineModel,
    dφa = dφta
    dφb = dφtb
 
-   ɛa = (τ₁-τ₀)*g₀
-   ɛb = -(τ₁+τ₀)*g₀
-   if weak_wolfe
-     ɛb = Inf
-   end
+   start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
    verboseLS && println("ϵₐ = $ɛa ϵᵦ = $ɛb")
 
-   admissible = ((dφt>=ɛa) & (dφt<=ɛb))
-   tired =  iter>maxiterLS
+   admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
    t_original = NaN
 
    debug && PyPlot.figure(1)
@@ -108,8 +103,7 @@ function Biss_Nwt_ls(h :: LineModel,
      dφt = dφplus
 
      iter = iter+1
-     admissible = ((dφt>=ɛa) & (dφt<=ɛb)) && Armijo(t, φ(t) + h₀ + τ₀*t*g₀, dφ(t) + τ₀ * g₀, h₀, g₀, τ₀)
-
+     admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
      if admissible && add_step && (n_add_step < 1)
        t_original = copy(t)
        n_add_step +=1
@@ -118,8 +112,6 @@ function Biss_Nwt_ls(h :: LineModel,
 
      debug && PyPlot.figure(1)
      debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀*t*g₀])    #costs an additionnal function evaluation
-
-     tired =  iter>maxiterLS
 
      verboseLS && @printf(" %7e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtqnp,dφt)
    end

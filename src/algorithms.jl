@@ -25,12 +25,12 @@ push!(algorithms,Biss_Sec_ls)
 push!(algorithms,Biss_SecA_ls)
 
 #zoom methods
-# push!(algorithms, trouve_intervalleA_ls)
+# push!(algorithms, find_intervalA_ls)
 push!(algorithms, zoom_Cub_ls)
 push!(algorithms, zoom_ls)
-push!(algorithms, zoom_nwt_ls)
-push!(algorithms, zoom_secA_ls)
-push!(algorithms, zoom_sec_ls)
+push!(algorithms, zoom_Nwt_ls)
+push!(algorithms, zoom_SecA_ls)
+push!(algorithms, zoom_Sec_ls)
 
 #linesearch algorithms infaced from LineSearches
 push!(interfaced_algorithms,_backtracking2!)
@@ -47,8 +47,8 @@ push!(algorithms,_strongwolfe2!)
 push!(Newton_linesearch,TR_Nwt_ls)
 push!(Newton_linesearch,ARC_Nwt_ls)
 push!(Newton_linesearch, Biss_Nwt_ls)
-push!(Newton_linesearch, zoom_nwt_ls)
-push!(Newton_linesearch,trouve_intervalleA_ls)
+push!(Newton_linesearch, zoom_Nwt_ls)
+push!(Newton_linesearch,find_intervalA_ls)
 
 #"basic" linesearch
 push!(algorithms, Newarmijo_wolfe)

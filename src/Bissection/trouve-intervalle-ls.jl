@@ -1,5 +1,5 @@
-export trouve_intervalle_ls
-function trouve_intervalle_ls(h :: LineModel,
+export find_interval_ls
+function find_interval_ls(h :: LineModel,
                               h₀ :: Float64,
                               g₀ :: Float64,
                               g :: Array{Float64,1};

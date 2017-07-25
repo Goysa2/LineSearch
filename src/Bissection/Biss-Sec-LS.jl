@@ -6,7 +6,7 @@ function Biss_Sec_ls(h :: LineModel,
                  γ :: Float64=0.8,
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
-                 maxiter :: Int=50,
+                 stp_ls :: TStopping_LS = TStopping_LS(),
                  verboseLS :: Bool=false,
                  debug :: Bool = false,
                  check_param :: Bool = false,
@@ -32,7 +32,7 @@ function Biss_Sec_ls(h :: LineModel,
     end
 
 
-    (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g; kwargs...)
+    (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h,h₀,g₀,g; kwargs...)
 
     t=ta
     tp=tb
@@ -42,6 +42,8 @@ function Biss_Sec_ls(h :: LineModel,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
+    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+
     φt = φta
     φtm1 = φtb
     dφt = dφta
@@ -49,16 +51,9 @@ function Biss_Sec_ls(h :: LineModel,
 
     dφa = dφta
     dφb = dφtb
-    ɛa = (τ₁-τ₀)*g₀
-    ɛb = -(τ₁+τ₀)*g₀
-    if weak_wolfe
-      ɛb = Inf
-    end
+    admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
-    admissible = ((dφt>=ɛa) & (dφt<=ɛb))
     t_original = NaN
-    tired=iter > maxiter
-
     debug && PyPlot.figure(1)
     debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
@@ -109,9 +104,7 @@ function Biss_Sec_ls(h :: LineModel,
       dφt=dφplus
 
       iter=iter+1
-
-      admissible = (dφt>=ɛa) & (dφt<=ɛb)
-      tired=iter>maxiter
+      admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
       if admissible && add_step && (n_add_step < 1)
         n_add_step +=1

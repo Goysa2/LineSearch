@@ -1,11 +1,14 @@
 export Biss_ls
+
+# generic bissection algorithm designed to return an admissible step size.
+
 function Biss_ls(h :: LineModel,
                  h₀ :: Float64,
                  g₀ :: Float64,
                  g :: Array{Float64,1};
                  τ₀ :: Float64=1.0e-4,
                  τ₁ :: Float64=0.9999,
-                 maxiter :: Int=50,
+                 stp_ls :: TStopping_LS = TStopping_LS(),
                  verboseLS :: Bool=false,
                  check_param :: Bool = false,
                  check_slope :: Bool = false,
@@ -28,26 +31,27 @@ function Biss_ls(h :: LineModel,
       return (t, t, true, ht, 0, 0, false)
     end
 
+    # We find an interval containing an admissible step size
+    (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h,h₀,g₀,g; kwargs...)
 
-    (ta, φta, dφta, tb, φtb, dφtb) = trouve_intervalle_ls(h,h₀,g₀,g; kwargs...)
-    #println("a la sorti de trouve_intervalle_ls ta=",ta," tb=",tb)
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
+
+    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
     tp=(ta+tb)/2
 
     iter=0
 
     # test d'arrêt sur dφ
-    ɛa = (τ₁-τ₀)*g₀
-    ɛb = -(τ₁+τ₀)*g₀
-    if weak_wolfe
-      ɛb = Inf
-    end
+    # ɛa = (τ₁-τ₀)*g₀
+    # ɛb = -(τ₁+τ₀)*g₀
+    # if weak_wolfe
+    #   ɛb = Inf
+    # end
 
-    admissible = false
+    admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
     t_original = NaN
-    tired=iter > maxiter
     verboseLS && @printf("   iter   ta       tb        tp        dφp\n");
     verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e \n", iter,ta,tb,tp,NaN);
 
@@ -64,8 +68,7 @@ function Biss_ls(h :: LineModel,
       end
 
       iter=iter+1
-      admissible = (dφp>=ɛa) & (dφp<=ɛb)
-      tired=iter>maxiter
+      admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
       if admissible && add_step && (n_add_step < 1)
         n_add_step +=1

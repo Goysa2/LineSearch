@@ -1,17 +1,22 @@
 export TR_Cub_ls
+
+# Variation on the classical one dimensionnal trust region method using a two
+# point cubic approximation of h. Information about the specific hyper parameters
+# are presented in TR_generic_ls
+
+# The scheme is the same but put in different function since it's a different
+# approximation
+
 function TR_Cub_ls(h :: LineModel,
                    h₀ :: Float64,
                    g₀ :: Float64,
                    g :: Array{Float64,1};
+                   stp_ls :: TStopping_LS = TStopping_LS(),
                    τ₀ :: Float64=1.0e-4,
-                   eps1 :: Float64 = 0.1,
-                   eps2 :: Float64 = 0.7,
-                   red :: Float64 = 0.15,
-                   aug :: Float64= 10.0,
                    τ₁ :: Float64=0.9999,
                    maxiterLS :: Int64=50,
                    verboseLS :: Bool=false,
-                   symetrique :: Bool = false,
+                   symmetrical :: Bool = false,
                    check_param :: Bool = false,
                    debug :: Bool = false,
                    add_step :: Bool = true,
@@ -26,9 +31,9 @@ function TR_Cub_ls(h :: LineModel,
       verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
     end
 
-    (t,ht,gt,A_W,Δp,Δn,ɛa,ɛb)=init_TR(h,h₀,g₀,g,τ₀,τ₁;kwargs...)
+    (t,ht,gt,A_W,Δp,Δn)=init_TR(h,h₀,g₀,g,τ₀,τ₁;kwargs...)
     if weak_wolfe
-      ɛb = Inf
+      ɛb = maxintfloat(Float64)
     end
 
     if A_W
@@ -38,23 +43,22 @@ function TR_Cub_ls(h :: LineModel,
     t_original = NaN
 
     iter = 0
-    gt = grad!(h,t,g)
+    # gt = grad!(h,t,g)
     dN = -gt #pour la premiere iteration
 
-    φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
-    dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
+    φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # function and
+    dφ(t) = grad!(h,t,g) - τ₀*g₀    # derivative
 
-    # le reste de l'algo minimise la fonction φ...
-    # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    # φt = φ(t)          # on sait que φ(0)=0
-    # dφt = dφ(t) # connu dφ(0)=(1.0-τ₀)*g₀
+    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+
+    # The rest of the algorithm work with φ
+    # therefore, Armijo condition will be satisfied when φ(t)<φ(0)=0
     φt = ht - h₀ - τ₀*t*g₀
     dφt = gt - τ₀*g₀
     if t == 0.0
-        φt = 0.0
-        dφt = (1 - τ₀)*g₀
+      φt = 0.0              # known that φ(0) = 0.0
+      dφt = (1.0 - τ₀)*g₀   # known that φ'(0) = (1.0 - τ₀) * h'(0)
     end
-
 
     if t == 0.0
       A=0.5
@@ -71,14 +75,14 @@ function TR_Cub_ls(h :: LineModel,
       A=-(dφt+z)/α
     end
 
-
     # Version avec la sécante: modèle quadratique
     cub(d)= φt + dφt*d + A*d^2 + B*d^3
 
     verboseLS && @show ɛa, ɛb
 
-    admissible = false
-    t_original = NaN
+    # admissible = false
+    # t_original = NaN
+    admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
     tired=iter > maxiterLS
     verboseLS && @printf("     iter   t       φt        dφt        Δn        Δp            d            ratio\n");
     verboseLS && @printf("  %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
@@ -134,9 +138,9 @@ function TR_Cub_ls(h :: LineModel,
         end
         ratio = ared / pred
 
-        if ratio < eps1  # Unsuccessful
-            Δp = red*Δp
-            Δn = red*Δn
+        if ratio < stp_ls.eps1  # Unsuccessful
+            Δp = stp_ls.red*Δp
+            Δn = stp_ls.red*Δn
             verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9e  %9e\n", iter,t,φt,dφt,Δn,Δp,d,ratio);
         else             # Successful
             tprec = copy(t)
@@ -157,24 +161,19 @@ function TR_Cub_ls(h :: LineModel,
             B= 1/3*(dφt+dφtprec+2*z)/(α*α)
             A=-(dφt+z)/α
 
-            #verboseLS && @show s y α discr denom B A
-
-            if symetrique
-              if ratio > eps2
-                Δp = aug * Δp
-                Δn = aug * Δn
+            if symmetrical
+              if ratio > stp_ls.eps2
+                Δp = stp_ls.aug * Δp
+                Δn = stp_ls.aug * Δn
               end
             else
-              if ratio > eps2
-                Δp = aug * Δp
-                Δn = min(-t, aug * Δn)
+              if ratio > stp_ls.eps2
+                Δp = stp_ls.aug * Δp
+                Δn = min(-t, stp_ls.aug * Δn)
               else
                 Δn = min(-t, Δn)
               end
             end
-
-            admissible = (dφt>=ɛa) & (dφt<=ɛb)  # Wolfe, Armijo garanti par la
-                                                # descente
 
             if admissible && add_step && (n_add_step < 1)
               n_add_step +=1
@@ -184,7 +183,7 @@ function TR_Cub_ls(h :: LineModel,
             verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e  %9e  %9e\n", iter,t,φt,dφt,Δn,Δp,d, ratio);
         end;
         iter+=1
-        tired=iter>maxiterLS
+        admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
     end
 
     # recover h
