@@ -8,6 +8,8 @@ include("Nwt_computation_ls.jl")
 include("Sec_computation_ls.jl")
 include("SecA_computation_ls.jl")
 include("stopping_ls.jl")
+include("step-computation-ls.jl")
+
 
 
 include("ARC/ARC-Cub-LS.jl")

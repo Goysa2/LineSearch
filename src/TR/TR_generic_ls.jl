@@ -41,8 +41,10 @@ function TR_generic_ls(h :: LineModel,
       verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
     end
 
+    start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+
     # We check if 1.0 is an admissible step size
-    t = 1.0; t_original = NaN
+    global t = 1.0; t_original = Base.NaN
     (t,ht,gt,A_W,Δp,Δn)=init_TR(h,h₀,g₀,g,τ₀,τ₁;kwargs...)
 
     #If 1.0 is an admissible step size we don't need to go furter
@@ -56,10 +58,7 @@ function TR_generic_ls(h :: LineModel,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # function and
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # derivative
 
-    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
-
-    # print_with_color(:green,"on est ici! \n")
-    # @show stp_ls.εa stp_ls.εb stp_ls.maxiterLS stp_ls.weak_wolfe stp_ls.red stp_ls.aug
+    tprec = NaN; φtestTR = NaN; dφtestTR = NaN; φtprec = NaN; dφtprec = NaN;
 
     # The rest of the algorithm work with φ
     # therefore, Armijo condition will be satisfied when φ(t)<φ(0)=0
@@ -69,8 +68,6 @@ function TR_generic_ls(h :: LineModel,
       φt = 0.0              # known that φ(0) = 0.0
       dφt = (1.0 - τ₀)*g₀   # known that φ'(0) = (1.0 - τ₀) * h'(0)
     end
-
-    ddφt = NaN
 
     # H will denote the approximation to φ'' hereafter
     if direction == "Nwt"
@@ -85,8 +82,6 @@ function TR_generic_ls(h :: LineModel,
     verboseLS && println("ϵₐ = $(stp_ls.ɛa) ϵᵦ = $(stp_ls.ɛb)")
 
     # Stopping criterion of the algorithm
-    # admissible = false
-    # tired = iter > stp_ls.maxiterLS
     admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
     debug && PyPlot.figure(1)
@@ -129,13 +124,15 @@ function TR_generic_ls(h :: LineModel,
                          # step size
 
             # depending on our approximation we adjust our parameters
-            if direction=="Nwt"
-              (t, φt, dφt, H) = Nwt_computation_ls(t, d, φtestTR, dφtestTR, h)
-            elseif direction=="Sec"
-              (t, φt, dφt, H) = Sec_computation_ls(t, tprec, dφtprec, d, φtestTR, dφtestTR)
-            elseif direction=="SecA"
-              (t, φt, dφt, H) = SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR, dφtestTR)
-            end
+            # if direction=="Nwt"
+            #   (t, φt, dφt, H) = Nwt_computation_ls(t, d, φtestTR, dφtestTR, h)
+            # elseif direction=="Sec"
+            #   (t, φt, dφt, H) = Sec_computation_ls(t, tprec, dφtprec, d, φtestTR, dφtestTR)
+            # elseif direction=="SecA"
+            #   (t, φt, dφt, H) = SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR, dφtestTR)
+            # end
+
+            (t, φt, dφt, H) = step_computation_ls(direction, h, t, tprec, φtestTR, dφtestTR, d, φtprec, dφtprec)
 
             if symmetrical        # We adjust our interval if we want it symmetrical
                                   # or not
@@ -153,9 +150,6 @@ function TR_generic_ls(h :: LineModel,
                 Δn = min(-t, Δn)
               end
             end
-
-          #  admissible = (dφt>=stp_ls.ɛa) & (dφt<=stp_ls.ɛb) # admissible for strong Wolfe.
-                                                             # Armijo guaranteed with descent
 
             if admissible && add_step                        # We can do an extra step if
                                                              # desired
@@ -185,7 +179,6 @@ function TR_generic_ls(h :: LineModel,
 
             verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9e %9.2e  %9e\n", iter,t,φt,dφt,ddφt,Δn,Δp,1,dN, ratio);
         end;
-        # tired = iter > stp_ls.maxiterLS
         admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
     end;
 

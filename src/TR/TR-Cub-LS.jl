@@ -14,7 +14,6 @@ function TR_Cub_ls(h :: LineModel,
                    stp_ls :: TStopping_LS = TStopping_LS(),
                    τ₀ :: Float64=1.0e-4,
                    τ₁ :: Float64=0.9999,
-                   maxiterLS :: Int64=50,
                    verboseLS :: Bool=false,
                    symmetrical :: Bool = false,
                    check_param :: Bool = false,
@@ -22,7 +21,6 @@ function TR_Cub_ls(h :: LineModel,
                    add_step :: Bool = true,
                    n_add_step :: Int64 = 0,
                    check_slope :: Bool = false,
-                   weak_wolfe :: Bool = false,
                    kwargs...)
 
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
@@ -32,9 +30,6 @@ function TR_Cub_ls(h :: LineModel,
     end
 
     (t,ht,gt,A_W,Δp,Δn)=init_TR(h,h₀,g₀,g,τ₀,τ₁;kwargs...)
-    if weak_wolfe
-      ɛb = maxintfloat(Float64)
-    end
 
     if A_W
       return (t, t, true, ht, 0.0, 0.0, false)
@@ -49,7 +44,7 @@ function TR_Cub_ls(h :: LineModel,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # function and
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # derivative
 
-    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+    start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
     # The rest of the algorithm work with φ
     # therefore, Armijo condition will be satisfied when φ(t)<φ(0)=0
@@ -80,10 +75,7 @@ function TR_Cub_ls(h :: LineModel,
 
     verboseLS && @show ɛa, ɛb
 
-    # admissible = false
-    # t_original = NaN
     admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
-    tired=iter > maxiterLS
     verboseLS && @printf("     iter   t       φt        dφt        Δn        Δp            d            ratio\n");
     verboseLS && @printf("  %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e \n", iter,t,φt,dφt,Δn,Δp);
 

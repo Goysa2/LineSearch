@@ -24,25 +24,19 @@ type TStopping_LS
   end
 end
 
-function start_ls!(h :: LineModel,
-                  #  t :: Float64,
-                   g :: Array{Float64,1},
+function start_ls!(g :: Array{Float64,1},
                    s :: TStopping_LS,
                    τ₀ :: Float64,
                    τ₁ :: Float64,
                    h₀ :: Float64,
                    g₀ :: Float64;
                    kwargs...)
-
-  φ(t) = obj(h,t) - h₀ - τ₀*t*g₀
-  dφ(t) = grad!(h,t,g) - τ₀*g₀
   s.ɛa = (τ₁-τ₀)*g₀
   s.εb = -(τ₁+τ₀)*g₀
   s.maxiterLS = 50; s.red = 0.15; s.aug = 10.0; s.eps1 = 0.1; s.eps2 = 0.7
   if s.weak_wolfe
     s.εb = Inf
   end
-  # return φ(t), dφ(t)
 end
 
 function stop_ls(s :: TStopping_LS,
