@@ -32,10 +32,6 @@ else
   t = 0.0
 end
 
-# Strong wolfe parameters
-ɛa = (τ₁ - τ₀) * g₀
-ɛb = -(τ₁ + τ₀) * g₀
-
-return (t, ht, gt, A, W)#, ɛa, ɛb)
+return (t, ht, gt, A, W)
 
 end

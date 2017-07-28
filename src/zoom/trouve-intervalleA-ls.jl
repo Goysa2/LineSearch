@@ -35,7 +35,7 @@ function find_intervalA_ls(h :: LineModel,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
-    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+    start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
     tim1=t₀
     #ti=(tim1+tmax)/2

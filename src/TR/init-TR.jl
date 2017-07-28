@@ -39,11 +39,7 @@ else
   t = 0.0
 end
 
-# Strong wolfe parameters
-ɛa = (τ₁-τ₀)*g₀
-ɛb = -(τ₁+τ₀)*g₀
-
-return (t, ht, gt, false, Δp, Δn)#, ɛa, ɛb)
+return (t, ht, gt, false, Δp, Δn)
 # Outputs:
 # t :: where we'll start our algorithm
 # ht :: h(t) = f(x + t⋆d)
@@ -51,5 +47,4 @@ return (t, ht, gt, false, Δp, Δn)#, ɛa, ɛb)
 # true :: If Armijo & Wolfe satisfied, false otherwise
 # Δp :: Positive bound of the trust region
 # Δn :: Negative bound of the trust region
-# εa & εb :: Strong Wolfe bounds
 end

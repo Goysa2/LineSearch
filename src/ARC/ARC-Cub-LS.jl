@@ -43,7 +43,7 @@ function ARC_Cub_ls(h :: LineModel,
     φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
     dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
 
-    start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+    start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
     # le reste de l'algo minimise la fonction φ...
     # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0

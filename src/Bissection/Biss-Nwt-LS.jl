@@ -48,7 +48,7 @@ function Biss_Nwt_ls(h :: LineModel,
    dφa = dφta
    dφb = dφtb
 
-   start_ls!(h, g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+   start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
    verboseLS && println("ϵₐ = $ɛa ϵᵦ = $ɛb")
 

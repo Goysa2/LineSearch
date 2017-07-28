@@ -4,7 +4,6 @@ export Newton_linesearch
 
 using JuMP, NLPModels, Optimize
 using PolynomialRoots
-# using ScalarOptimizationProblems
 using ScalarSolvers
 
 using LSDescentMethods, Stopping

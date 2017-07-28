@@ -30,7 +30,7 @@ function TR_generic_ls(h :: LineModel,
                        direction :: String="Nwt",
                        check_param :: Bool = false,
                        debug :: Bool = false,
-                       add_step :: Bool = false,
+                       #add_step :: Bool = false,
                        check_slope :: Bool = false,
                        kwargs...)
 
@@ -123,15 +123,6 @@ function TR_generic_ls(h :: LineModel,
         else             # Successful approximation => we move towards a admissible
                          # step size
 
-            # depending on our approximation we adjust our parameters
-            # if direction=="Nwt"
-            #   (t, φt, dφt, H) = Nwt_computation_ls(t, d, φtestTR, dφtestTR, h)
-            # elseif direction=="Sec"
-            #   (t, φt, dφt, H) = Sec_computation_ls(t, tprec, dφtprec, d, φtestTR, dφtestTR)
-            # elseif direction=="SecA"
-            #   (t, φt, dφt, H) = SecA_computation_ls(t, tprec, φtprec, dφtprec, d, φtestTR, dφtestTR)
-            # end
-
             (t, φt, dφt, H) = step_computation_ls(direction, h, t, tprec, φtestTR, dφtestTR, d, φtprec, dφtprec)
 
             if symmetrical        # We adjust our interval if we want it symmetrical
@@ -151,30 +142,30 @@ function TR_generic_ls(h :: LineModel,
               end
             end
 
-            if admissible && add_step                        # We can do an extra step if
-                                                             # desired
-              t_original = copy(t)
-              dht = dφt + τ₀ * g₀
-              ddht = H
+            # if admissible && add_step                        # We can do an extra step if
+            #                                                  # desired
+            #   t_original = copy(t)
+            #   dht = dφt + τ₀ * g₀
+            #   ddht = H
+            #
+            #   dN = -dφt/H
+            #   d = TR_ls_step_computation(H, dφt, dN, Δn, Δp)
+            #
+            #   tprec = copy(t)
+            #   t = t + d
+            #   ht = obj(h, t)
+            #   dht = grad!(h, t, g)
+            #   verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
+            #   verboseLS && (dφt = dht - τ₀ * g₀)
+            #   verboseLS && (ddφt = hess(h,t))
+            # end
 
-              dN = -dφt/H
-              d = TR_ls_step_computation(H, dφt, dN, Δn, Δp)
-
-              tprec = copy(t)
-              t = t + d
-              ht = obj(h, t)
-              dht = grad!(h, t, g)
-              verboseLS && (φt = ht - h₀ - τ₀ * t * g₀)
-              verboseLS && (dφt = dht - τ₀ * g₀)
-              verboseLS && (ddφt = hess(h,t))
-            end
-
-            debug && PyPlot.figure(1)
-            if admissible
-              debug && PyPlot.scatter([t], [ht])
-            else
-              debug && PyPlot.scatter([t], [φt + h₀ + τ₀ * t * g₀])
-            end
+            # debug && PyPlot.figure(1)
+            # if admissible
+            #   debug && PyPlot.scatter([t], [ht])
+            # else
+            #   debug && PyPlot.scatter([t], [φt + h₀ + τ₀ * t * g₀])
+            # end
             iter+=1
 
             verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9e %9.2e  %9e\n", iter,t,φt,dφt,ddφt,Δn,Δp,1,dN, ratio);
@@ -183,9 +174,9 @@ function TR_generic_ls(h :: LineModel,
     end;
 
     # recover h
-    if !add_step
+    # if !add_step
       ht = φt + h₀ + τ₀ * t * g₀
-    end
+    # end
 
     t > 0.0 || (verboseLS && @show t dφt )
     @assert (t > 0.0) && (!isnan(t)) "invalid step"
