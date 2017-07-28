@@ -14,8 +14,6 @@ using LineSearches
 
 using Plots, PyPlot
 
-# include("includes.jl")
-
 include("algorithms.jl")
 
 end # module

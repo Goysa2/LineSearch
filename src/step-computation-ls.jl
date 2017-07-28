@@ -16,9 +16,9 @@ function step_computation_ls(direction :: String,
 
     φt = φtestTR
     dφt = dφtestTR
-    ddφt = hess(h,t)
+    ddφt = hess(h, t)
 
-    return (t,φt,dφt,ddφt)
+    return (t, φt, dφt, ddφt)
   end
 
   if direction == "Sec"
@@ -27,9 +27,9 @@ function step_computation_ls(direction :: String,
     φt = φtestTR
     s = t-tprec
     y = dφt - dφtprec
-    seck = y/s
+    seck = y / s
 
-    return (t,φt,dφt,seck)
+    return (t, φt, dφt, seck)
   end
 
   if direction == "SecA"
@@ -41,15 +41,15 @@ function step_computation_ls(direction :: String,
     s = t-tprec
     y = dφt - dφtprec
 
-    Γ=3*(dφt+dφtprec)*s-6*(φt-φtprec)
-    if (y*s+Γ) < eps(Float64)*s^2
-      yt=y
+    Γ= 3 * (dφt + dφtprec) * s - 6 * (φt - φtprec)
+    if (y * s + Γ) < eps(Float64) * s^2
+      yt = y
     else
-      yt=y+Γ/s
+      yt =  y + Γ / s
     end
 
-    seck=yt/s
+    seck = yt / s
 
-    return (t,φt,dφt,seck)
+    return (t, φt, dφt, seck)
   end
 end

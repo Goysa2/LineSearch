@@ -6,17 +6,17 @@ function TR_ls_step_computation(h :: Float64,
                                 Δn :: Float64,
                                 Δp ::Float64)
 
-  if h>0
-    if g>0
-      d=max(Δn,dN)
+  if h > 0.0
+    if g > 0.0
+      d = max(Δn, dN)
     else
-      d=min(dN,Δp)
+      d = min(dN, Δp)
     end
   else
-    if g>0
-      d=Δn
+    if g > 0.0
+      d = Δn
     else
-      d=Δp
+      d = Δp
     end
   end
 

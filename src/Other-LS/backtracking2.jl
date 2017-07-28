@@ -23,19 +23,20 @@ export _backtracking2!
 
 T = Float64
 
-function _backtracking2!{T}(h::LineModel,
-                            f::Real,
-                            slope::Real,
-                            ∇ft::Array{T,1};
-                            lsr::LineSearchResults=LineSearchResults{Float64}([0.0],[f],[slope],0),
-                            alpha::Real = 1.0,
-                            mayterminate::Bool = false,
-                            τ₀::Real = 1e-4,
-                            rhohi::Real = 0.5,
-                            rholo::Real = 0.1,
-                            iterations::Integer = 1_000,
-                            order::Int = 3,
-                            maxstep::Real = Inf,
+function _backtracking2!{T}(h :: LineModel,
+                            f :: Real,
+                            slope :: Real,
+                            ∇ft :: Array{T,1};
+                            lsr :: LineSearchResults =
+                                LineSearchResults{Float64}([0.0], [f], [slope], 0),
+                            alpha :: Real = 1.0,
+                            mayterminate :: Bool = false,
+                            τ₀ :: Real = 1e-4,
+                            rhohi :: Real = 0.5,
+                            rholo :: Real = 0.1,
+                            iterations :: Integer = 1_000,
+                            order :: Int = 3,
+                            maxstep :: Real = Inf,
                             kwargs...)
 
     s = h.d

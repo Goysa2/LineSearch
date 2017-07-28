@@ -150,20 +150,21 @@ export _morethuente2!, csttep2
 
 T = Float64
 
-function _morethuente2!{T}(h::LineModel,
-                           f::Real,
-                           slope::Real,
-                           ∇ft::Array{T,1};
-                           lsr::LineSearchResults{T}=LineSearchResults([0.0],[f],[slope],0),
-                           stp::Real=1.0,
-                           mayterminate::Bool=false,
-                           n::Integer = length(h.x),
-                           τ₀::Real = 1e-4,
-                           τ₁::Real = 0.9,
-                           x_tol::Real = 1e-8,
-                           stpmin::Real = 1e-16,
-                           stpmax::Real = 65536.0,
-                           maxfev::Integer = 100,
+function _morethuente2!{T}(h :: LineModel,
+                           f :: Real,
+                           slope :: Real,
+                           ∇ft :: Array{T,1};
+                           lsr :: LineSearchResults{T} =
+                                  LineSearchResults([0.0], [f], [slope], 0),
+                           stp :: Real=1.0,
+                           mayterminate :: Bool = false,
+                           n :: Integer = length(h.x),
+                           τ₀ :: Real = 1e-4,
+                           τ₁ :: Real = 0.9,
+                           x_tol :: Real = 1e-8,
+                           stpmin :: Real = 1e-16,
+                           stpmax :: Real = 65536.0,
+                           maxfev :: Integer = 100,
                            kwargs...)
     s = h.d
     df = h.nlp

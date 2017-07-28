@@ -83,23 +83,24 @@ const DEFAULTSIGMA = 0.9
 T = Float64
 
 
-function _hagerzhang2!{T}(h::LineModel,
-                          f::Real,
-                          slope::Real,
-                          ∇ft::Array{T,1};
-                          lsr :: LineSearchResults{T} = LineSearchResults([0.0],[f],[slope],0),
-                          mayterminate::Bool=false,
-                          c::Real=1.0,
-                          τ₀::Real = DEFAULTDELTA,
-                          τ₁::Real = DEFAULTSIGMA,
-                          alphamax::Real = convert(T,Inf),
-                          rho::Real = convert(T,5),
-                          epsilon::Real = convert(T,1e-6),
-                          gamma::Real = convert(T,0.66),
-                          linesearchmax::Integer = 10,
-                          psi3::Real = convert(T,0.1),
-                          display::Integer = 0,
-                          iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
+function _hagerzhang2!{T}(h :: LineModel,
+                          f :: Real,
+                          slope :: Real,
+                          ∇ft :: Array{T,1};
+                          lsr  ::  LineSearchResults{T} =
+                                    LineSearchResults([0.0], [f], [slope], 0),
+                          mayterminate :: Bool = false,
+                          c :: Real = 1.0,
+                          τ₀ :: Real = DEFAULTDELTA,
+                          τ₁ :: Real = DEFAULTSIGMA,
+                          alphamax :: Real = convert(T, Inf),
+                          rho :: Real = convert(T, 5),
+                          epsilon :: Real = convert(T, 1e-6),
+                          gamma :: Real = convert(T, 0.66),
+                          linesearchmax :: Integer = 10,
+                          psi3 :: Real = convert(T, 0.1),
+                          display :: Integer = 0,
+                          iterfinitemax :: Integer = ceil(Integer, -log2(eps(T))),
                           kwargs...)
     s = h.d
     x = copy(h.x)
@@ -278,7 +279,8 @@ function _hagerzhang2!{T}(h::LineModel,
         iter += 1
     end
 
-    # throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
+    # throw(LineSearchException("Linesearch failed to converge,
+    # reached maximum iterations $(linesearchmax).",
     #                           lsr.alpha[ia],lsr))
 
     return 0.0, 0.0, false, NaN, iter, NaN, true

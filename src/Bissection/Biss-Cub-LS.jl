@@ -32,7 +32,7 @@ function Biss_Cub_ls(h :: LineModel,
 
  #println("au début de Biss_Cub_ls g₀=",g₀)
 
- (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h,h₀,g₀,g; kwargs...)
+ (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h, h₀, g₀, g; kwargs...)
 
  #println("on est après le find_interval_ls")
  t=tb
@@ -46,97 +46,99 @@ function Biss_Cub_ls(h :: LineModel,
  start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
 
- iter=0
+ iter = 0
 
- φt=φta
- φtm1=φtb
- dφt=dφta
- dφtm1=dφtb
+ φt = φta
+ φtm1 = φtb
+ dφt = dφta
+ dφtm1 = dφtb
 
- dφa=dφta
- dφb=dφtb
+ dφa = dφta
+ dφb = dφtb
 
  admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
  t_original = NaN
 
  debug && PyPlot.figure(1)
- debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+ debug && PyPlot.scatter([t],[φt + h₀ + τ₀ * t * g₀])
 
- verboseLS && @printf(" iter        tqnp        t         dφtm1        dφt        \n")
- verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
+ verboseLS && @printf("iter        tqnp        t         dφtm1        dφt \n")
+ verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n",
+                      iter, tqnp, t, dφtm1, dφt)
 
  while !(admissible | tired)
 
-   s=t-tqnp
-   y=dφt-dφtm1
+   s = t - tqnp
+   y = dφt - dφtm1
 
-   α=-s
-   z=dφt+dφtm1+3*(φt-φtm1)/α
-   discr=z^2-dφt*dφtm1
-   denom=dφt+dφtm1+2*z
-   if (discr>0) & (abs(denom)>eps(Float64))
+   α = -s
+   z = dφt + dφtm1 + 3 * (φt - φtm1) / α
+   discr = z^2 - dφt * dφtm1
+   denom = dφt + dφtm1 + 2 * z
+   if (discr > 0.0) && (abs(denom) > eps(Float64))
      #si on peut on utilise l'interpolation cubique
-     w=sqrt(discr)
-     dN=-s*(dφt+z+sign(α)*w)/(denom)
+     w = sqrt(discr)
+     dN = -s * (dφt + z + sign(α) * w) / (denom)
    else #on se rabat sur une étape de sécante
-     dN=-dφt*s/y
+     dN = -dφt * s / y
    end
 
-   if ((tp-t)*dN>0) & (dN/(tp-t)<γ)
+   if ((tp-t) * dN > 0.0) && (dN / (tp - t) < γ)
      tplus = t + dN
      φplus = φ(tplus)
-     dφplus= dφ(tplus)
+     dφplus = dφ(tplus)
      verboseLS && println("N")
    else
-     tplus = (t+tp)/2
+     tplus = (t + tp) / 2
      φplus = φ(tplus)
      dφplus = dφ(tplus)
      verboseLS && println("B")
    end
 
-   if t>tp
-     if dφplus<0
-       tp=t
-       tqnp=t
-       t=tplus
+   if t > tp
+     if dφplus < 0.0
+       tp = t
+       tqnp = t
+       t = tplus
      else
-       tqnp=t
-       t=tplus
+       tqnp = t
+       t = tplus
      end
    else
-     if dφplus>0
-       tp=t
-       tqnp=t
-       t=tplus
+     if dφplus > 0.0
+       tp = t
+       tqnp = t
+       t = tplus
      else
-       tqnp=t
-       t=tplus
+       tqnp = t
+       t = tplus
      end
    end
    #println("tp=",tp," t=",t)
-   φtm1=φt
-   dφtm1=dφt
-   φt=φplus
-   dφt=dφplus
+   φtm1 = φt
+   dφtm1 = dφt
+   φt = φplus
+   dφt = dφplus
 
-   iter=iter+1
+   iter += 1
    admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
    if admissible && add_step && (n_add_step < 1)
      t_original = copy(t)
-     n_add_step +=1
+     n_add_step += 1
      admissible = false
    end
 
    debug && PyPlot.figure(1)
-   debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+   debug && PyPlot.scatter([t],[φt + h₀ + τ₀ * t * g₀])
 
-   verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n", iter,tqnp,t,dφtm1,dφt)
+   verboseLS && @printf(" %7.2e %7.2e  %7.2e  %7.2e  %7.2e\n",
+                        iter, tqnp, t, dφtm1, dφt)
  end
 
- ht = φ(t) + h₀ + τ₀*t*g₀
+ ht = φt + h₀ + τ₀ * t * g₀
 
  @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
- return (t, t_original, true,ht,iter,0,tired)
+ return (t, t_original, true, ht, iter, 0, tired)
 end

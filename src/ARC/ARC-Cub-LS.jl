@@ -24,164 +24,165 @@ function ARC_Cub_ls(h :: LineModel,
                    weak_wolfe :: Bool = false,
                    kwargs...)
 
-    (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
+  (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
 
-    if check_slope
-      (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
-      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
-    end
+  if check_slope
+    (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
+    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+  end
 
-    (t,ht,gt,Ar,W)=init_ARC(h,h₀,g₀,g,τ₀,τ₁)
+  (t, ht, gt, Ar, W) = init_ARC(h, h₀, g₀, g, τ₀, τ₁)
 
-    if Ar && W
-      return (t, t, true, ht, 0.0, 0.0, false)
-    end
+  if Ar && W
+    return (t, t, true, ht, 0.0, 0.0, false)
+  end
 
-    iter = 0
-    dN=-gt #pour la premiere iteration
+  iter = 0
+  dN = -gt #pour la premiere iteration
 
-    φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
-    dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
+  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
+  dφ(t) = grad!(h, t, g) - τ₀ * g₀    # dérivée
 
-    start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
+  start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
-    # le reste de l'algo minimise la fonction φ...
-    # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
-    φt = ht - h₀ - τ₀*t*g₀
-    dφt = gt - τ₀*g₀
-    if t == 0.0
-        φt = 0.0
-        dφt = (1 - τ₀)*g₀
-    end
+  # le reste de l'algo minimise la fonction φ...
+  # par conséquent, le critère d'Armijo sera vérifié φ(t)<φ(0)=0
+  φt = ht - h₀ - τ₀ * t * g₀
+  dφt = gt - τ₀ * g₀
+  if t == 0.0
+      φt = 0.0
+      dφt = (1 - τ₀) * g₀
+  end
 
-    if t == 0.0
-      A=0.5
-      B=0.0
-    elseif t == 1.0
-      φtprec = 0.0; dφtprec = (1.0-τ₀)*g₀
-      s = t - 0.0
-      y = dφt - dφtprec
-      a=-s
-      z= dφt + dφtprec + 3*(φt-φtprec)/a
-      discr = z^2-dφtprec*dφt
-      denom = dφt + dφtprec + 2*z
-      B= 1/3*(dφt+dφtprec+2*z)/(a*a)
-      A=-(dφt+z)/a
-    end
+  if t == 0.0
+    A = 0.5
+    B = 0.0
+  elseif t == 1.0
+    φtprec = 0.0; dφtprec = (1.0 - τ₀) * g₀
+    s = t - 0.0
+    y = dφt - dφtprec
+    a = -s
+    z = dφt + dφtprec + 3 * (φt - φtprec) / a
+    discr = z^2 - dφtprec * dφt
+    denom = dφt + dφtprec + 2*z
+    B = 1/3 * (dφt + dφtprec + 2 * z) / (a * a)
+    A =-(dφt + z) / a
+  end
 
-    if Ar   #version 3
-      Δ = 100.0/abs(φt)
+  if Ar   #version 3
+    Δ = 100.0/abs(φt)
+  else
+    if t == 1.0
+      Δ = 1.0 / abs(dφt)
     else
-      if t == 1.0
-        Δ = 1.0/abs(dφt)
-      else
-        Δ = 1.0/abs(1000.0)
-      end
+      Δ = 1.0 / abs(1000.0)
     end
+  end
 
-    Quad(d) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*Δ))*t^4
+  Quad(d) = φt + dφt * t + A * t^2 + B * t^3 + (1 / (4 * Δ)) * t^4
 
-    t_original = NaN
+  t_original = NaN
 
-    verboseLS && println("ɛa = $ɛa ɛb = $ɛb")
+  verboseLS && println("ɛa = $(stp_ls.ɛa) ɛb = $(stp_ls.ɛb)")
 
-    admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
+  admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
-    debug && PyPlot.figure(1)
-    debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+  debug && PyPlot.figure(1)
+  debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
 
-    verboseLS && @printf("   iter   t       φt        dφt        Δ        t+d      \n");
-    verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t);
+  verboseLS && @printf("  iter   t       φt        dφt        Δ        t+d \n");
+  verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n",
+                       iter, t, φt, dφt, Δ, t);
 
-    while !(admissible | tired) #admissible: respecte armijo et wolfe, tired: nb d'itérations
-        #step computation
-        Quad(t) = φt + dφt*t + A*t^2 + B*t^3 + (1/(4*Δ))*t^4
+  while !(admissible | tired) # admissible: respecte armijo et wolfe
+                              # tired: nb d'itérations
+      #step computation
+      Quad(t) = φt + dφt * t + A * t^2 + B * t^3 + (1 / (4 * Δ)) * t^4
 
-        dR_1=roots([dφt,2*A,3*B,(1/Δ)])
+      dR = roots([dφt, 2 * A, 3 * B, (1 / Δ)])
 
-        dR = copy(dR_1)
-
-        vmin=Inf
-        for i=1:length(dR)
-          rr=dR[i]
-          if isfinite(rr) && (imag(rr) < 1e-8)
-            rr=real(rr)
-            vact=Quad(rr)
-            if rr*dφt<0
-              if vact<vmin
-                dN=rr
-                vmin=vact
-              end
+      vmin = Inf
+      for i = 1:length(dR)
+        rr = dR[i]
+        if isfinite(rr) && (imag(rr) < 1e-8)
+          rr = real(rr)
+          vact = Quad(rr)
+          if rr * dφt < 0.0
+            if vact < vmin
+              dN = rr
+              vmin =  vact
             end
           end
         end
+      end
 
-        d=dN
+      d = dN
 
-        if d==0.0
-          ht = φt + h₀ + τ₀*t*g₀
-          return (t,true, ht, iter+1 , 0, true)
-          #L'OUTIL DE CALCUL DES RACINES DU PACKAGE Polynomials ARRONDIE À 0 CERTAINES RACINES D'OÙ LA NOUVELLE CONDITION
-        end
+      if d == 0.0
+        ht = φt + h₀ + τ₀ * t * g₀
+        return (t, true, ht, iter + 1 , 0, true)
+      end
 
 
-        φtestTR = φ(t+d)
-        dφtestTR= dφ(t+d)
-        # test d'arrêt sur dφ
+      φtestTR = φ(t + d)
+      dφtestTR = dφ(t + d)
+      # test d'arrêt sur dφ
 
-        pred = dφt * d + A * d^2 + B * d^3
-        #assert(pred<0)   # How to recover? As is, it seems to work...
-        if pred >-1e-10
-          ared=(dφt+dφtestTR)*d/2
-        else
-          ared=φtestTR-φt
-        end
+      pred = dφt * d + A * d^2 + B * d^3
+      #assert(pred<0)   # How to recover? As is, it seems to work...
+      if pred > -1e-10
+        ared = (dφt + dφtestTR) * d / 2
+      else
+        ared = φtestTR - φt
+      end
 
-        tprec = t;
-        φtprec = φt;
-        dφtprec = dφt;
-        ratio = ared / pred
+      tprec = t;
+      φtprec = φt;
+      dφtprec = dφt;
+      ratio = ared / pred
 
-        if (t + d < 0.0) && (ratio < stp_ls.eps1)  # Unsuccessful
-            Δ=stp_ls.red*Δ
-            verboseLS && @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n", iter,t,φt,dφt,Δ,t+d,φtestTR);
-        else             # Successful
-            t = t + d
+      if (t + d < 0.0) && (ratio < stp_ls.eps1)  # Unsuccessful
+          Δ = stp_ls.red * Δ
+          verboseLS &&
+            @printf("U %4d %9.2e %9.2e  %9.2e %9.2e  %9.2e %9.2e\n",
+                    iter, t, φt, dφt, Δ, t+d, φtestTR);
+      else             # Successful
+          t = t + d
 
-            dφt = dφtestTR
-            φt = φtestTR
+          dφt = dφtestTR
+          φt = φtestTR
 
-            s = t-tprec
-            y = dφt- dφtprec
+          s = t-tprec
+          y = dφt- dφtprec
 
-            a=-s
-            z=dφt+dφtprec+3*(φt-φtprec)/a
-            discr=z^2-dφt*dφtprec
-            denom=dφt+dφtprec+2*z
-            B=(1/3)*(dφt+dφtprec+2*z)/(a*a)
-            A=-(dφt+z)/a
+          a = -s
+          z = dφt + dφtprec + 3 * (φt - φtprec) / a
+          discr = z^2 - dφt * dφtprec
+          denom = dφt + dφtprec + 2 * z
+          B = (1/3) * (dφt + dφtprec + 2 * z) / (a * a)
+          A = -(dφt + z) / a
 
-            if ratio > stp_ls.eps2
-                Δ=stp_ls.aug*Δ
-            end
+          if ratio > stp_ls.eps2
+              Δ = stp_ls.aug * Δ
+          end
 
-            if admissible && add_step && (n_add_step < 1)
-              n_add_step +=1
-              admissible = false
-            end
+          if admissible && add_step && (n_add_step < 1)
+            n_add_step += 1
+            admissible = false
+          end
 
-            debug && PyPlot.figure(1)
-            debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
-            verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n", iter,t,φt,dφt,Δ);
-        end;
-        iter+=1
-        admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
-    end;
+          debug && PyPlot.figure(1)
+          debug && PyPlot.scatter([t], [φt + h₀ + τ₀ * t * g₀])
+          verboseLS && @printf("S %4d %9.2e %9.2e  %9.2e   %9.2e \n",
+                                iter, t, φt, dφt, Δ);
+      end;
+      iter += 1
+      admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
+  end;
 
-    # recover h
-    ht = φt + h₀ + τ₀*t*g₀
-    @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  # recover h
+  ht = φt + h₀ + τ₀ * t * g₀
+  @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
-    return (t,t_original,true, ht, iter,0,tired)  #pourquoi le true et le 0?
-
-end
+  return (t, t_original, true, ht, iter, 0, tired)
+end # function

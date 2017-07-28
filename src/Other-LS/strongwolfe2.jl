@@ -23,16 +23,17 @@ export _strongwolfe2!, zoom2, interpolate2
 
 T = Float64
 
-function _strongwolfe2!{T}(h::LineModel,
-                           f::Real,
-                           slope::Real,
-                           ∇ft::Array{T,1};
-                           lsr::LineSearchResults{T}=LineSearchResults([0.0],[f],[slope],0),
-                           alpha0::Real=1.0,
-                           mayterminate::Bool=false,
-                           τ₀::Real = 1e-4,
-                           τ₁::Real = 0.9,
-                           rho::Real = 2.0,
+function _strongwolfe2!{T}(h :: LineModel,
+                           f :: Real,
+                           slope :: Real,
+                           ∇ft :: Array{T,1};
+                           lsr :: LineSearchResults{T} =
+                                  LineSearchResults([0.0], [f], [slope], 0),
+                           alpha0 :: Real = 1.0,
+                           mayterminate :: Bool = false,
+                           τ₀ :: Real = 1e-4,
+                           τ₁ :: Real = 0.9,
+                           rho :: Real = 2.0,
                            kwargs...)
     df = h.nlp
     x = copy(h.x)
