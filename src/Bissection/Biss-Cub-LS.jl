@@ -59,6 +59,8 @@ function Biss_Cub_ls(h :: LineModel,
  admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
  t_original = NaN
 
+ verboseLS && println("ϵₐ = $(stp_ls.ɛa) ϵᵦ = $(stp_ls.ɛb)")
+
  debug && PyPlot.figure(1)
  debug && PyPlot.scatter([t],[φt + h₀ + τ₀ * t * g₀])
 

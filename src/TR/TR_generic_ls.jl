@@ -89,7 +89,7 @@ function TR_generic_ls(h :: LineModel,
 
   verboseLS &&
     @printf("  iter   t       φt        dφt        ddφt        Δn         Δp")
-  verboseLS &&  
+  verboseLS &&
     @printf("   Successful        dN        ratio\n")
   verboseLS &&
     @printf("%4d %9.2e  %9.2e %9.2e %9.2e %9.2e %9.2e\n", iter, t, φt, dφt, H,

@@ -9,7 +9,7 @@ include("Sec_computation_ls.jl")
 include("SecA_computation_ls.jl")
 include("stopping_ls.jl")
 include("step-computation-ls.jl")
-
+include("pred_ared.jl")
 
 
 include("ARC/ARC-Cub-LS.jl")
@@ -19,8 +19,9 @@ include("ARC/ARC-SecA-LS.jl")
 
 include("ARC/init_ARC.jl")
 include("ARC/ARC_generic_ls.jl")
+include("ARC/ARC_direction_computation.jl")
 
-include("Bissection/trouve-intervalle-ls.jl")
+include("Bissection/find-interval-ls.jl")
 include("Bissection/Biss-LS.jl")
 include("Bissection/Biss-Cub-LS.jl")
 include("Bissection/Biss-Nwt-LS.jl")
@@ -34,10 +35,9 @@ include("TR/TR-SecA-LS.jl")
 
 include("TR/init-TR.jl")
 include("TR/TR_generic_ls.jl")
-
 include("TR/TR-ls-step-computation.jl")
 
-include("zoom/trouve-intervalleA-ls.jl")
+include("zoom/find-intervalA-ls.jl")
 include("zoom/zoom-ls.jl")
 include("zoom/zoom-Nwt-ls.jl")
 include("zoom/zoom-Cub-ls.jl")

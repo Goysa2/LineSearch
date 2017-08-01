@@ -38,8 +38,8 @@ function Biss_SecA_ls(h :: LineModel,
   tqnp = ta
   iter = 0
 
-  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
-  dφ(t) = grad!(h, t, g) - τ₀ * g₀    # dérivée
+  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # function and
+  dφ(t) = grad!(h, t, g) - τ₀ * g₀     # derivative
 
   start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
@@ -52,9 +52,10 @@ function Biss_SecA_ls(h :: LineModel,
   dφb = dφtb
 
 
-  println("ϵₐ = $(stp_ls.ɛa) ϵᵦ = $(stp_ls.ɛb)")
+  verboseLS && println("ϵₐ = $(stp_ls.ɛa) ϵᵦ = $(stp_ls.ɛb)")
 
   admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
+
   t_original = NaN
   debug && PyPlot.figure(1)
   debug && PyPlot.scatter([t],[φt + h₀ + τ₀ * t * g₀])
@@ -63,8 +64,8 @@ function Biss_SecA_ls(h :: LineModel,
   verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e  %9.2e\n",
                        iter, tp, tqnp, t, φt, dφt);
 
-  while !(admissible | tired) # admissible: respecte armijo et wolfe,
-                              # tired: nb d'itérations
+  while !(admissible | tired) # admissible: satisfies Armijo & Wolfe,
+                              # tired: exceeds maximum number of iterations
     s = t-tqnp
     y = dφt-dφtm1
 

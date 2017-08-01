@@ -1,19 +1,13 @@
 module LineSearch
-export algorithms, interfaced_algorithms
-export Newton_linesearch
+export ls_algorithms, interfaced_ls_algorithms
 
-using JuMP, NLPModels, Optimize
-using PolynomialRoots
-using ScalarSolvers
-
-using LSDescentMethods, Stopping
+using Optimize, PolynomialRoots
+using LSDescentMethods
+using LineSearches
+using PyPlot
 
 include("includes.jl")
 
-using LineSearches
-
-using Plots, PyPlot
-
-include("algorithms.jl")
+include("algorithms-ls.jl")
 
 end # module

@@ -40,8 +40,8 @@ function Biss_Nwt_ls(h :: LineModel,
    tqnp = tb
    iter = 0
 
-   φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
-   dφ(t) = grad!(h, t, g) - τ₀ * g₀    # dérivée
+   φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # function and
+   dφ(t) = grad!(h, t, g) - τ₀ * g₀     # derivative
    ddφ(t) = hess(h, t)
 
    iter=0
@@ -64,8 +64,8 @@ function Biss_Nwt_ls(h :: LineModel,
    verboseLS && @printf(" %7e %7.2e  %7.2e  %7.2e  %7.2e\n",
                         iter, tqnp, t, dφa, dφb)
 
-   while !(admissible | tired)
-
+   while !(admissible | tired) # admissible: satisfies Armijo & Wolfe,
+                               # tired: exceeds maximum number of iterations                                   
      ddφt = ddφ(t)
      dN = -dφt / ddφt
 

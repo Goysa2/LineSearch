@@ -23,7 +23,7 @@ function Biss_ls(h :: LineModel,
     verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
   end
 
-
+  # We check if the step size of one is admissible
   t = 1.0
   ht = obj(h, t)
   gt = grad!(h, t, g)
@@ -34,32 +34,33 @@ function Biss_ls(h :: LineModel,
   # We find an interval containing an admissible step size
   (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h, h₀, g₀, g; kwargs...)
 
-  φ(t) = obj(h,t) - h₀ - τ₀ * t * g₀  # fonction et
-  dφ(t) = grad!(h, t, g) - τ₀ * g₀    # dérivée
+  φ(t) = obj(h,t) - h₀ - τ₀ * t * g₀  # function and
+  dφ(t) = grad!(h, t, g) - τ₀ * g₀    # derivative
 
   start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
+  # We cut the interval in 2
   tp = (ta + tb) / 2
 
   iter = 0
 
-  # test d'arrêt sur dφ
-  # ɛa = (τ₁-τ₀)*g₀
-  # ɛb = -(τ₁+τ₀)*g₀
-  # if weak_wolfe
-  #   ɛb = Inf
-  # end
-
   admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
   t_original = NaN
-  verboseLS && @printf("   iter   ta       tb        tp        dφp\n");
-  verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e \n", iter,ta,tb,tp,NaN)
+  verboseLS &&
+    @printf("   iter   ta       tb        tp        dφp\n");
+  verboseLS &&
+    @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e \n", iter, ta, tb, tp, NaN)
 
-  while !(admissible | tired) # admissible: respecte armijo et wolfe,
-                              # tired: nb d'itérations
-    tp = (ta + tb) / 2
+  while !(admissible | tired) # admissible: satisfies Armijo & Wolfe,
+                              # tired: nb of iterations
+
+    if iter > 0               # We don't want to compute tp twice
+      tp = (ta + tb) / 2
+    end
+
     dφp = dφ(tp)
 
+    # We adjust our intervals depending on the sign of φ'(tp)
     if dφp <= 0.0
       ta = tp
       dφa = dφp
@@ -71,6 +72,7 @@ function Biss_ls(h :: LineModel,
     iter += 1
     admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
+    # Additional step if desired
     if admissible && add_step && (n_add_step < 1)
       n_add_step +=1
       admissible = false

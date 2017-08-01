@@ -39,8 +39,8 @@ function Biss_Sec_ls(h :: LineModel,
   tqnp = tb
   iter = 0
 
-  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
-  dφ(t) = grad!(h, t, g) - τ₀ * g₀     # dérivée
+  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # function and
+  dφ(t) = grad!(h, t, g) - τ₀ * g₀     # derivative
 
   start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
@@ -51,6 +51,9 @@ function Biss_Sec_ls(h :: LineModel,
 
   dφa = dφta
   dφb = dφtb
+
+  verboseLS && println("ϵₐ = $(stp_ls.ɛa) ϵᵦ = $(stp_ls.ɛb)")
+
   admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
   t_original = NaN
@@ -61,8 +64,8 @@ function Biss_Sec_ls(h :: LineModel,
   verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e  %9.2e\n",
                        iter, tp, tqnp, t, φt, dφt);
 
-  while !(admissible | tired) # admissible: respecte armijo et wolfe,
-                              # tired: nb d'itérations
+  while !(admissible | tired) # admissible: satisfies Armijo & Wolfe,
+                              # tired: exceeds maximum number of iterations
     s = t - tqnp
     y = dφt - dφtm1
 
@@ -124,5 +127,5 @@ function Biss_Sec_ls(h :: LineModel,
 
   @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
-  return (t, t_original,true, ht, iter,0,tired)  #pourquoi le true et le 0?
+  return (t, t_original,true, ht, iter, 0, tired)
 end
