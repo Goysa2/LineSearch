@@ -3,11 +3,11 @@ function Biss_Nwt_ls(h :: LineModel,
                      h₀ :: Float64,
                      g₀ :: Float64,
                      g :: Array{Float64,1};
-                     γ :: Float64=0.8,
-                     τ₀ :: Float64=1.0e-4,
-                     τ₁ :: Float64=0.9999,
+                     γ :: Float64 = 0.8,
+                     τ₀ :: Float64 = 1.0e-4,
+                     τ₁ :: Float64 = 0.9999,
                      stp_ls :: TStopping_LS = TStopping_LS(),
-                     verboseLS :: Bool=false,
+                     verboseLS :: Bool = false,
                      check_param :: Bool = false,
                      debug :: Bool = false,
                      add_step :: Bool = true,
@@ -19,7 +19,7 @@ function Biss_Nwt_ls(h :: LineModel,
   (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
   if check_slope
     (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
-    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h, 0.0)
   end
 
   t = 1.0
@@ -27,7 +27,7 @@ function Biss_Nwt_ls(h :: LineModel,
   gt = grad!(h, t, g)
   Ar = Armijo(t, ht, gt, h₀, g₀, τ₀); Wo = Wolfe(gt, g₀, τ₁)
   if Ar && Wo
-    return (t,t, false, ht, 0, 0, false)
+    return (t, t, false, ht, 0, 0, false)
   end
 
   (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h, h₀, g₀, g,
@@ -44,7 +44,7 @@ function Biss_Nwt_ls(h :: LineModel,
    dφ(t) = grad!(h, t, g) - τ₀ * g₀     # derivative
    ddφ(t) = hess(h, t)
 
-   iter=0
+   iter = 0
 
    dφt = dφta
    dφa = dφta
@@ -58,14 +58,14 @@ function Biss_Nwt_ls(h :: LineModel,
    t_original = NaN
 
    debug && PyPlot.figure(1)
-   debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀*t*g₀])
+   debug && PyPlot.scatter([t],[φ(t) + h₀ + τ₀ * t * g₀])
 
    verboseLS && @printf(" iter     tqnp        t         dφtqnp     dφt \n")
    verboseLS && @printf(" %7e %7.2e  %7.2e  %7.2e  %7.2e\n",
                         iter, tqnp, t, dφa, dφb)
 
    while !(admissible | tired) # admissible: satisfies Armijo & Wolfe,
-                               # tired: exceeds maximum number of iterations                                   
+                               # tired: exceeds maximum number of iterations
      ddφt = ddφ(t)
      dN = -dφt / ddφt
 

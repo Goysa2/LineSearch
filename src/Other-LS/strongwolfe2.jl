@@ -78,7 +78,7 @@ function _strongwolfe2!{T}(h :: LineModel,
             a_star = zoom2(a_iminus1, a_i,
                           phiprime_0, phi_0,
                           df, x, p, x_new)
-            return a_star
+            return a_star, a_star, false, NaN, i, NaN, false
         end
 
         # Evaluate phi'(a_i)
@@ -90,7 +90,7 @@ function _strongwolfe2!{T}(h :: LineModel,
 
         # Check condition 2
         if abs(phiprime_a_i) <= -τ₁ * phiprime_0
-            return a_i
+            return a_i, a_i, false, NaN, i, NaN, false
         end
 
         # Check condition 3
@@ -98,7 +98,7 @@ function _strongwolfe2!{T}(h :: LineModel,
             a_star = zoom2(a_i, a_iminus1,
                           phiprime_0, phi_0,
                           df, x, p, x_new)
-            return a_star
+            return a_star, a_star, false, NaN, i, NaN, false
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
@@ -113,7 +113,7 @@ function _strongwolfe2!{T}(h :: LineModel,
     end
 
     # Quasi-error response
-    return a_max
+    return a_max, a_max, false, NaN, i, NaN, false
 end
 
 function zoom2(a_lo::Real,

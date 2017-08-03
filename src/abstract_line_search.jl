@@ -62,6 +62,12 @@ function abstract_line_search(h :: LineModel,
   start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
   admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
+  # At the end of each line search we make sure that our step size is positive
+  # and it's not a NaN. Most methods take care this doesn't happen, it's not
+  # impossible that a step size slips through the cracks.
+  t > 0.0 || (verboseLS && @show t dφt )
+  @assert (t > 0.0) && (!isnan(t)) "invalid step"
+
   # Outputs:
   # t :: the (admissible) step size
   # t_original :: if we do an extra step in the line search t_original is the

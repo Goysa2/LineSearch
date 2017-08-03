@@ -28,7 +28,7 @@ function ARC_Cub_ls(h :: LineModel,
 
   if check_slope
     (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
-    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h, 0.0)
   end
 
   (t, ht, gt, Ar, W) = init_ARC(h, h₀, g₀, g, τ₀, τ₁)
@@ -69,8 +69,8 @@ function ARC_Cub_ls(h :: LineModel,
     A =-(dφt + z) / a
   end
 
-  if Ar   #version 3
-    Δ = 100.0/abs(φt)
+  if Ar   #version 3              # TODO: find a better way to select Δ
+    Δ = 100.0 / abs(φt)           # Also in ARC_generic_ls
   else
     if t == 1.0
       Δ = 1.0 / abs(dφt)
@@ -88,7 +88,7 @@ function ARC_Cub_ls(h :: LineModel,
   admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
   debug && PyPlot.figure(1)
-  debug && PyPlot.scatter([t],[φt + h₀ + τ₀*t*g₀])
+  debug && PyPlot.scatter([t], [φt + h₀ + τ₀ * t * g₀])
 
   verboseLS && @printf("  iter   t       φt        dφt        Δ        t+d \n");
   verboseLS && @printf(" %4d %9.2e %9.2e  %9.2e  %9.2e %9.2e\n",
@@ -96,8 +96,9 @@ function ARC_Cub_ls(h :: LineModel,
 
   while !(admissible | tired) # admissible: respecte armijo et wolfe
                               # tired: nb d'itérations
-      #step computation
-      Quad(t) = φt + dφt * t + A * t^2 + B * t^3 + (1 / (4 * Δ)) * t^4
+      # direction computation
+      # Quad(t) = φt + dφt * t + A * t^2 + B * t^3 + (1 / (4 * Δ)) * t^4
+      # Quad'(t) = dφt + 2 * A * t + 3 * B * t² + (1 / Δ) * t³
 
       dR = roots([dφt, 2 * A, 3 * B, (1 / Δ)])
 

@@ -20,7 +20,7 @@ function Biss_Sec_ls(h :: LineModel,
 
   if check_slope
     (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
-    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+    verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h, 0.0)
   end
 
 
@@ -108,7 +108,7 @@ function Biss_Sec_ls(h :: LineModel,
     φt = φplus
     dφt = dφplus
 
-    iter = iter+1
+    iter += 1
     admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
 
     if admissible && add_step && (n_add_step < 1)
@@ -127,5 +127,5 @@ function Biss_Sec_ls(h :: LineModel,
 
   @assert (t > 0.0) && (!isnan(t)) "invalid step"
 
-  return (t, t_original,true, ht, iter, 0, tired)
+  return (t, t_original, true, ht, iter, 0, tired)
 end

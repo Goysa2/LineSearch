@@ -44,7 +44,7 @@ function Biss_ls(h :: LineModel,
 
   iter = 0
 
-  admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
+  admissible, tired = stop_ls(stp_ls, dφ(t), iter; kwargs...)
   t_original = NaN
   verboseLS &&
     @printf("   iter   ta       tb        tp        dφp\n");
@@ -70,7 +70,7 @@ function Biss_ls(h :: LineModel,
     end
 
     iter += 1
-    admissible, tired = stop_ls(stp_ls, dφt, iter; kwargs...)
+    admissible, tired = stop_ls(stp_ls, dφp, iter; kwargs...)
 
     # Additional step if desired
     if admissible && add_step && (n_add_step < 1)
@@ -82,7 +82,7 @@ function Biss_ls(h :: LineModel,
                           iter, ta, tb, tp, dφp);
   end;
 
-  ht = φt + h₀ + τ₀ * t * g₀
+  ht = φ(tp) + h₀ + τ₀ * tp * g₀
 
   @assert (t > 0.0) && (!isnan(t)) "invalid step"
 

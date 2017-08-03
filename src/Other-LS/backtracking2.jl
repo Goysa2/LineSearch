@@ -130,5 +130,5 @@ function _backtracking2!{T}(h :: LineModel,
         push!(lsr.value, f_x_scratch)
     end
 
-    return alpha
+    return alpha, alpha, false, NaN, iterations, NaN, false
 end

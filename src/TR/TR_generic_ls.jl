@@ -190,7 +190,8 @@ function TR_generic_ls(h :: LineModel,
   end
 
   t > 0.0 || (verboseLS && @show t dφt )
-  @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  # @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  (t > 0.0) || warn("invalid step")
 
   return (t, t_original, true, ht, iter, 0, tired)
 

@@ -1,32 +1,32 @@
 export find_interval_ls
 function find_interval_ls(h :: LineModel,
-                              h₀ :: Float64,
-                              g₀ :: Float64,
-                              g :: Array{Float64,1};
-                              t₀ :: Float64 = 0.0,
-                              inc0 :: Float64 = 1.0,
-                              τ₀ :: Float64 = 1.0e-4,
-                              τ₁ :: Float64 = 0.9999,
-                              maxiter :: Int = 100,
-                              verboseLS :: Bool = false,
-                              debug :: Bool = false,
-                              kwargs...)
+                          h₀ :: Float64,
+                          g₀ :: Float64,
+                          g :: Array{Float64,1};
+                          t₀ :: Float64 = 0.0,
+                          inc0 :: Float64 = 1.0,
+                          τ₀ :: Float64 = 1.0e-4,
+                          τ₁ :: Float64 = 0.9999,
+                          maxiter :: Int = 100,
+                          verboseLS :: Bool = false,
+                          debug :: Bool = false,
+                          kwargs...)
 
   iter = 1
   inc = inc0
 
-  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
-  dφ(t) = grad!(h, t, g) - τ₀ * g₀     # dérivée
+  φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # function and
+  dφ(t) = grad!(h, t, g) - τ₀ * g₀     # derivative
 
-  φt₀ = 0.0              # on sait que φ(0)=0
-  dφt₀ = (1.0 - τ₀) * g₀ # connu dφ(0)=(1.0-τ₀)*g₀
+  φt₀ = 0.0                            # φ(0)=0             by definition
+  dφt₀ = (1.0 - τ₀) * g₀               # φ''(0)=(1.0-τ₀)*g₀ by definition
   sd = -sign(dφt₀)
   t₁ = t₀ + sd * inc
   φt1 = φ(t₁)
   dφt1 = dφ(t₁)
 
   ɛa = (τ₁ - τ₀) * g₀
-  ɛb = -(τ₁+τ₀)*g₀
+  ɛb = -(τ₁ + τ₀)*g₀
 
   debug && PyPlot.figure(1)
   debug && PyPlot.scatter([t₁],[φt1 + h₀ + τ₀ * t₁ * g₀])

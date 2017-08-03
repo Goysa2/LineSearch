@@ -5,11 +5,11 @@ function ARC_generic_ls(h :: LineModel,
                         g :: Array{Float64,1};
                         stp_ls :: TStopping_LS = TStopping_LS(),
                         Δ :: Float64 = 1.0,
-                        τ₀ :: Float64=1.0e-4,
-                        τ₁ :: Float64=0.9999,
-                        maxiterLS :: Int64=50,
-                        verboseLS :: Bool=false,
-                        direction :: String="Nwt",
+                        τ₀ :: Float64 = 1.0e-4,
+                        τ₁ :: Float64 = 0.9999,
+                        maxiterLS :: Int64 = 50,
+                        verboseLS :: Bool = false,
+                        direction :: String = "Nwt",
                         check_param :: Bool = false,
                         check_slope :: Bool = false,
                         add_step :: Bool = true,
@@ -21,7 +21,7 @@ function ARC_generic_ls(h :: LineModel,
 
     if check_slope
       (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
-      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+      verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h, 0.0)
     end
 
     #println("on rentre dans ARC τ₀ = $τ₀ τ₁ = $τ₁")
@@ -38,13 +38,15 @@ function ARC_generic_ls(h :: LineModel,
 
     iter = 0
 
-    φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
-    dφ(t) = grad!(h, t, g) - τ₀ * g₀      # dérivée
+    φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # function and
+    dφ(t) = grad!(h, t, g) - τ₀ * g₀     # derivative
+
+    tprec = NaN; φtestTR = NaN; dφtestTR = NaN; φtprec = NaN; dφtprec = NaN;
 
     #φt = φ(t)          # on sait que φ(0)=0
     #dφt = dφ(t)        # connu dφ(0)=(1.0-τ₀)*g₀
-    φt = ht - h₀ - τ₀*t*g₀
-    dφt = gt - τ₀*g₀
+    φt = ht - h₀ - τ₀ * t * g₀
+    dφt = gt - τ₀ * g₀
     if t == 0.0
         φt = 0.0
         dφt = (1 - τ₀) * g₀
@@ -99,7 +101,7 @@ function ARC_generic_ls(h :: LineModel,
           dφtprec = dφt
         elseif direction == "SecA"
           tprec = t
-          φtprec=φt
+          φtprec = φt
           dφtprec = dφt
         end
 
@@ -111,18 +113,11 @@ function ARC_generic_ls(h :: LineModel,
                     iter, t, φt, dφt, ddφt, Δ, 0, d);
         else             # Successful
 
-          if direction == "Nwt"
-            (t, φt, dφt , H) = Nwt_computation_ls(t, d , φtestTR, dφtestTR, h)
-          elseif direction == "Sec"
-            (t, φt, dφt, H) = Sec_computation_ls(t, tprec, dφtprec, d,
-                                                 φtestTR, dφtestTR)
-          elseif direction == "SecA"
-            (t, φt, dφt, H ) =SecA_computation_ls(t, tprec, φtprec, dφtprec, d,
-                                                  φtestTR, dφtestTR)
-          end
+          (t, φt, dφt, H) = step_computation_ls(direction, h, t, tprec, φtestTR,
+                                                dφtestTR, d, φtprec, dφtprec)
 
           if ratio > stp_ls.eps2
-            Δ = stp_ls.aug*Δ
+            Δ = stp_ls.aug * Δ
           end
 
           if admissible && add_step && (n_add_step < 1)

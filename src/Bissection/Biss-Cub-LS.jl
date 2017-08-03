@@ -3,11 +3,11 @@ function Biss_Cub_ls(h :: LineModel,
                      h₀ :: Float64,
                      g₀ :: Float64,
                      g :: Array{Float64,1};
-                     γ :: Float64=0.8,
-                     τ₀ :: Float64=1.0e-4,
-                     τ₁ :: Float64=0.9999,
+                     γ :: Float64 = 0.8,
+                     τ₀ :: Float64 = 1.0e-4,
+                     τ₁ :: Float64 = 0.9999,
                      stp_ls :: TStopping_LS = TStopping_LS(),
-                     verboseLS :: Bool=false,
+                     verboseLS :: Bool = false,
                      check_param :: Bool = false,
                      check_slope :: Bool = false,
                      debug :: Bool = false,
@@ -20,13 +20,13 @@ function Biss_Cub_ls(h :: LineModel,
 
  if check_slope
    (abs(g₀ - grad(h, 0.0)) < 1e-4) || warn("wrong slope")
-   verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h,0.0)
+   verboseLS && @show h₀ obj(h, 0.0) g₀ grad(h, 0.0)
  end
 
  t = 1.0
- ht = obj(h,t)
+ ht = obj(h, t)
  gt = grad!(h, t, g)
- if Armijo(t,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
+ if Armijo(t, ht, gt, h₀, g₀, τ₀) && Wolfe(gt, g₀, τ₁)
    return (t, t, true, ht, 0, 0, false)
  end
 
@@ -35,13 +35,13 @@ function Biss_Cub_ls(h :: LineModel,
  (ta, φta, dφta, tb, φtb, dφtb) = find_interval_ls(h, h₀, g₀, g; kwargs...)
 
  #println("on est après le find_interval_ls")
- t=tb
- tp=ta
- tqnp=ta
- iter=0
+ t = tb
+ tp = ta
+ tqnp = ta
+ iter = 0
 
- φ(t) = obj(h,t) - h₀ - τ₀*t*g₀  # fonction et
- dφ(t) = grad!(h,t,g) - τ₀*g₀    # dérivée
+ φ(t) = obj(h, t) - h₀ - τ₀ * t * g₀  # fonction et
+ dφ(t) = grad!(h, t, g) - τ₀ * g₀     # dérivée
 
  start_ls!(g, stp_ls, τ₀, τ₁, h₀, g₀; kwargs...)
 
@@ -78,14 +78,14 @@ function Biss_Cub_ls(h :: LineModel,
    discr = z^2 - dφt * dφtm1
    denom = dφt + dφtm1 + 2 * z
    if (discr > 0.0) && (abs(denom) > eps(Float64))
-     #si on peut on utilise l'interpolation cubique
+     # if possible we use cubic interpolation
      w = sqrt(discr)
      dN = -s * (dφt + z + sign(α) * w) / (denom)
-   else #on se rabat sur une étape de sécante
+   else # else we use secant interpolation
      dN = -dφt * s / y
    end
 
-   if ((tp-t) * dN > 0.0) && (dN / (tp - t) < γ)
+   if ((tp - t) * dN > 0.0) && (dN / (tp - t) < γ)
      tplus = t + dN
      φplus = φ(tplus)
      dφplus = dφ(tplus)
@@ -116,7 +116,7 @@ function Biss_Cub_ls(h :: LineModel,
        t = tplus
      end
    end
-   #println("tp=",tp," t=",t)
+
    φtm1 = φt
    dφtm1 = dφt
    φt = φplus
