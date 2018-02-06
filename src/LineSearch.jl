@@ -1,7 +1,7 @@
 module LineSearch
 export ls_algorithms, interfaced_ls_algorithms
 
-using Optimize, PolynomialRoots
+using Optimize, Polynomials
 using LSDescentMethods
 using LineSearches
 using PyPlot

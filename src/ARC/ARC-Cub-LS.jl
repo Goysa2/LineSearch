@@ -100,7 +100,7 @@ function ARC_Cub_ls(h :: LineModel,
       # Quad(t) = φt + dφt * t + A * t^2 + B * t^3 + (1 / (4 * Δ)) * t^4
       # Quad'(t) = dφt + 2 * A * t + 3 * B * t² + (1 / Δ) * t³
 
-      dR = roots([dφt, 2 * A, 3 * B, (1 / Δ)])
+      dR = roots(Poly([dφt, 2 * A, 3 * B, (1 / Δ)]))
 
       vmin = Inf
       for i = 1:length(dR)
@@ -183,7 +183,7 @@ function ARC_Cub_ls(h :: LineModel,
 
   # recover h
   ht = φt + h₀ + τ₀ * t * g₀
-  @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  #@assert (t > 0.0) && (!isnan(t)) "invalid step"
 
   return (t, t_original, true, ht, iter, 0, tired)
 end # function

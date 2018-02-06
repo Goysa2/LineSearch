@@ -36,6 +36,7 @@ function TR_Cub_ls(h :: LineModel,
   end
 
   t_original = NaN
+  s = 1.0; y = 1.0
 
   iter = 0
   # gt = grad!(h,t,g)
@@ -94,7 +95,7 @@ function TR_Cub_ls(h :: LineModel,
       # cub(t) = φt + dφt * t + A * t^2 + B * t^3
       # dcub(t) = dφt + 2 * A * t + 3 * B * t^2
 
-      dR = roots([dφt, 2 * A, 3 * B])
+      dR = roots(Poly([dφt, 2 * A, 3 * B]))
 
       if ((isfinite(dR[1]) && imag(dR[1]) == 0.0) ||
               (isfinite(dR[2]) && imag(dR[2]) == 0.0))
@@ -187,7 +188,7 @@ function TR_Cub_ls(h :: LineModel,
   ht = φt + h₀ + τ₀ * t * g₀
 
   t > 0.0 || (verboseLS && @show t dφt )
-  @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  #@assert (t > 0.0) && (!isnan(t)) "invalid step"
   return (t, t_original, true, ht, iter, 0, tired)
 
 end # function

@@ -97,7 +97,7 @@ function _hagerzhang2!{T}(h :: LineModel,
                           rho :: Real = convert(T, 5),
                           epsilon :: Real = convert(T, 1e-6),
                           gamma :: Real = convert(T, 0.66),
-                          linesearchmax :: Integer = 10,
+                          linesearchmax :: Integer = 50,
                           psi3 :: Real = convert(T, 0.1),
                           display :: Integer = 0,
                           iterfinitemax :: Integer = ceil(Integer, -log2(eps(T))),
@@ -141,7 +141,7 @@ function _hagerzhang2!{T}(h :: LineModel,
         if display & LINESEARCH > 0
             println("Wolfe condition satisfied on point alpha = ", c)
         end
-        return c, c, false, NaN, iterfinite, NaN, false # phic
+        return c, c, false, phic, iterfinite, NaN, false # phic
     end
     # Initial bracketing step (HZ, stages B0-B3)
     isbracketed = false
@@ -191,7 +191,7 @@ function _hagerzhang2!{T}(h :: LineModel,
                             ", cold = ", cold, ", new c = ", c)
                 end
                 if c == cold || nextfloat(c) >= alphamax
-                    return cold, cold, false, NaN, iter, NaN, false
+                    return cold, cold, false, phic, iter, NaN, false
                 end
             end
             phic, dphic = linefunc2!(df, x, s, c, xtmp, true)
@@ -207,7 +207,7 @@ function _hagerzhang2!{T}(h :: LineModel,
                 phic, dphic = linefunc2!(df, x, s, c, xtmp, true)
             end
             if !(isfinite(phic) && isfinite(dphic))
-                return cold, cold, false, NaN, iter, NaN, false
+                return cold, cold, false, phic, iter, NaN, false
             elseif dphic < 0 && c == alphamax
                 # We're on the edge of the allowed region, and the
                 # value is still decreasing. This can be due to
@@ -222,7 +222,7 @@ function _hagerzhang2!{T}(h :: LineModel,
                             ", phic = ", phic,
                             ", dphic = ", dphic)
                 end
-                return c, c,false, NaN, iter, NaN, false
+                return c, c,false, phic, iter, NaN, false
             end
             push!(lsr, c, phic, dphic)
         end
@@ -241,11 +241,11 @@ function _hagerzhang2!{T}(h :: LineModel,
                     ", phi(b) = ", lsr.value[ib])
         end
         if b - a <= eps(b)
-            return a, a,false, NaN, iter, NaN, false # lsr.value[ia]
+            return a, a,false, lsr.value[ia], iter, NaN, false # lsr.value[ia]
         end
         iswolfe, iA, iB = secant22!(df, x, s, xtmp, lsr, ia, ib, philim, τ₀, τ₁, display)
         if iswolfe
-            return lsr.alpha[iA], lsr.alpha[iA], false, NaN, iter, NaN, false # lsr.value[iA]
+            return lsr.alpha[iA], lsr.alpha[iA], false, lsr.value[iA], iter, NaN, false # lsr.value[iA]
         end
         A = lsr.alpha[iA]
         B = lsr.alpha[iB]
@@ -259,7 +259,7 @@ function _hagerzhang2!{T}(h :: LineModel,
                 if display & LINESEARCH > 0
                     println("Linesearch: secant suggests it's flat")
                 end
-                return A, A, false, NaN, iter, NaN, false
+                return A, A, false, lsr.value[iA], iter, NaN, false
             end
             ia = iA
             ib = iB

@@ -133,7 +133,7 @@ function Biss_SecA_ls(h :: LineModel,
   ht = φt + h₀ + τ₀ * t * g₀
 
   t > 0.0 || (verboseLS && println("t = $t"))
-  @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  #@assert (t > 0.0) && (!isnan(t)) "invalid step"
 
   return (t, t_original, true, ht, iter, 0, tired)
 end

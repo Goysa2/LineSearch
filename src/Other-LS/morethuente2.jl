@@ -272,7 +272,7 @@ function _morethuente2!{T}(h :: LineModel,
         #     return stp
         # end
         if isapprox(norm(grad!(df,x_new,∇ft)), 0) # TODO: this should be tested vs Optim's τ₁
-            return stp, stp, true, NaN, NaN, NaN, false
+            return stp, stp, true, f, NaN, NaN, false
         end
 
         nfev += 1 # This includes calls to f() and g!()
@@ -311,7 +311,7 @@ function _morethuente2!{T}(h :: LineModel,
         #
 
         if info != 0
-            return stp, stp, true, NaN, NaN, NaN, false
+            return stp, stp, true, obj(h, ftest1), NaN, NaN, false
         end
 
         #

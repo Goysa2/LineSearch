@@ -122,7 +122,7 @@ function Biss_Nwt_ls(h :: LineModel,
 
    ht = φ(t) + h₀ + τ₀ * t * g₀
 
-   @assert (t > 0.0) && (!isnan(t)) "invalid step"
+   #@assert (t > 0.0) && (!isnan(t)) "invalid step"
 
    return (t, t_original, false, ht, iter, 0, tired)
 

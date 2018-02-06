@@ -1,22 +1,24 @@
 export find_intervalA_ls
 function find_intervalA_ls(h :: LineModel,
-                               h₀ :: Float64,
-                               g₀ :: Float64,
-                               g :: Array{Float64,1};
-                               stp_ls :: TStopping_LS = TStopping_LS(),
-                               direction :: String="Nwt",
-                               τ₀ :: Float64=1.0e-4,
-                               τ₁ :: Float64=0.9,
-                               t₀ :: Float64=0.0,
-                               tmax :: Float64=1000.0,
-                               γ :: Float64 = 0.8,
-                               verboseLS :: Bool=false,
-                               check_param :: Bool = false,
-                               check_slope :: Bool = false,
-                               weak_wolfe :: Bool = false,
-                               kwargs...)
+                           h₀ :: Float64,
+                           g₀ :: Float64,
+                           g :: Array{Float64,1};
+                           stp_ls :: TStopping_LS = TStopping_LS(),
+                           direction :: String="Nwt",
+                           τ₀ :: Float64=1.0e-4,
+                           τ₁ :: Float64=0.9,
+                           t₀ :: Float64=0.0,
+                           tmax :: Float64=1000.0,
+                           γ :: Float64 = 0.8,
+                           verboseLS :: Bool=false,
+                           check_param :: Bool = false,
+                           check_slope :: Bool = false,
+                           weak_wolfe :: Bool = false,
+                           kwargs...)
 
-
+    if g₀ == NaN
+         return (0.0, 0.0, false, g₀, 0, 0, true)
+    end
     (τ₀ == 1.0e-4) || (check_param && warn("Different linesearch parameters"))
     if check_slope
       (abs(g₀ - grad(h, 0.0)) < 1e-4) || error("wrong slope")
@@ -29,7 +31,7 @@ function find_intervalA_ls(h :: LineModel,
     ht = obj(h,ti)
     gt = grad!(h, ti, g)
     if Armijo(ti,ht,gt,h₀,g₀,τ₀) && Wolfe(gt,g₀,τ₁)
-        return (ti,true,ht,0,0,false)
+        return (ti, ti, true, ht, 0,0, false)
     end
 
     # We redefine our h function into the φ function.
@@ -67,7 +69,7 @@ function find_intervalA_ls(h :: LineModel,
         (topt, good_grad, ht, i) =
                zoom_generic_ls(h, h₀, g₀, tim1, ti, stp_ls, direction=direction,
                                γ = γ, τ₀ = τ₀, τ₁ = τ₁, verboseLS = verboseLS)
-        return (topt, good_grad, ht, iter, 0, false)
+        return (topt, topt, good_grad, ht, iter, 0, false)
       end
 
       dφti = dφ(ti)
@@ -76,7 +78,7 @@ function find_intervalA_ls(h :: LineModel,
         #print_with_color(:green,"on résoud sans rentré dans zoom \n")
         topt = ti
         ht = φti + h₀ + τ₀ * ti * g₀
-        return (topt, false, ht, iter, 0, false)
+        return (topt, topt, false, ht, iter, 0, false)
       end
 
       if (dφti >= -t₀ * h₀)
@@ -84,7 +86,7 @@ function find_intervalA_ls(h :: LineModel,
         (topt, good_grad, ht, iter) =
                zoom_generic_ls(h, h₀, g₀, ti, tim1, stp_ls, direction=direction,
                                γ = γ,τ₀ = τ₀, τ₁ = τ₁, verboseLS = verboseLS)
-        return (topt,good_grad,ht,iter,0,false)
+        return (topt, topt, good_grad, ht, iter, 0, false)
       end
 
       #The current step t becomes the former step t
@@ -102,7 +104,7 @@ function find_intervalA_ls(h :: LineModel,
     end
 
     ht = φti + h₀ + τ₀ * ti * g₀
-    @assert (ti > 0.0) && (!isnan(ti)) "invalid step"
-    return (ti, false, ht, iter, 0, true)
+    #@assert (ti > 0.0) && (!isnan(ti)) "invalid step"
+    return (ti, ti, false, ht, iter, 0, true)
 
 end

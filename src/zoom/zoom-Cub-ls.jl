@@ -6,7 +6,7 @@ function zoom_Cub_ls(h :: LineModel,
                  verboseLS :: Bool =false,
                  kwargs...)
 
-  (ti, good_grad, ht, iter, zero, stalled_linesearch) =
+  (ti, ti, good_grad, ht, iter, zero, stalled_linesearch) =
                   find_intervalA_ls(h, h₀, g₀, g, direction = "Cub"; kwargs...)
 
   return (ti, ti, good_grad, ht, iter, zero, stalled_linesearch)

@@ -84,7 +84,7 @@ function Biss_ls(h :: LineModel,
 
   ht = φ(tp) + h₀ + τ₀ * tp * g₀
 
-  @assert (t > 0.0) && (!isnan(t)) "invalid step"
+  #@assert (t > 0.0) && (!isnan(t)) "invalid step"
 
   return (tp, t_original, true, ht, iter, 0, tired)
 end
