@@ -4,7 +4,7 @@ export ls_algorithms, interfaced_ls_algorithms
 using Optimize, Polynomials
 using LSDescentMethods
 using LineSearches
-using PyPlot
+# using PyPlot
 
 include("includes.jl")
 
