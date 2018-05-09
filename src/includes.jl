@@ -47,6 +47,9 @@ include("zoom/zoom-SecA-ls.jl")
 include("zoom/zoom-generic-ls.jl")
 include("zoom_computation.jl")
 
+include("types-LineSearches.jl")
+
+
 include("Other-LS/strongwolfe2.jl")
 include("Other-LS/morethuente2.jl")
 include("Other-LS/hagerzhang2.jl")

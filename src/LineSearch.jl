@@ -2,8 +2,9 @@ module LineSearch
 export ls_algorithms, interfaced_ls_algorithms
 
 using Optimize, Polynomials
-using LSDescentMethods
 using LineSearches
+using LSDescentMethods
+
 # using PyPlot
 
 include("includes.jl")
