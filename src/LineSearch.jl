@@ -11,6 +11,9 @@ include("phi_dphi.jl")
 include("pred_ared.jl")
 include("update_H.jl")
 
+include("armijo_backtracking.jl")
+
+
 include("TR/TR_generic_ls.jl")
 include("TR/TR-ls-step-computation.jl")
 include("TR/TR-Nwt-LS.jl")
