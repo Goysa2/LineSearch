@@ -1,14 +1,27 @@
 module LineSearch
-export ls_algorithms, interfaced_ls_algorithms
 
-using Optimize, Polynomials
-using LineSearches
-using LSDescentMethods
+using State
+using Stopping
+using NLPModels
 
-# using PyPlot
+include("LSFunctionMetamod.jl")
+include("LineModel2mod.jl")
 
-include("includes.jl")
+include("phi_dphi.jl")
+include("pred_ared.jl")
+include("update_H.jl")
 
-include("algorithms-ls.jl")
+include("TR/TR_generic_ls.jl")
+include("TR/TR-ls-step-computation.jl")
+include("TR/TR-Nwt-LS.jl")
+include("TR/TR-Sec-LS.jl")
+include("TR/TR-SecA-LS.jl")
+
+include("ARC/ARC_generic_ls.jl")
+include("ARC/ARC-Nwt-LS.jl")
+include("ARC/ARC-Sec-LS.jl")
+include("ARC/ARC-SecA-LS.jl")
+include("ARC/ARC_direction_computation.jl")
+
 
 end # module

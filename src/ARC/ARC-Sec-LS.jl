@@ -1,12 +1,15 @@
 export ARC_Sec_ls
-function ARC_Sec_ls(h :: LineModel,
-                   h₀ :: Float64,
-                   g₀ :: Float64,
-                   g :: Array{Float64,1};
-                   kwargs...)
+"""
+A one dimensionnal ARC algorithm using the exact second derivative in
+the second order Taylor expansion enriched with a cubic term.
+For more documentation referer to ARC_generic_ls.
+"""
+function ARC_Sec_ls(h       :: LineModel,
+                    stop_ls :: LS_Stopping,
+                    f_meta  :: LS_Function_Meta;
+                    kwargs...)
+    f_meta.dir = "Sec"
+    (state, stop_ls.meta.optimal) = ARC_generic_ls(h, stop_ls, f_meta; kwargs...)
 
-    (t, t_original, good_grad, ht,iter,zero,stalled_linesearch)=ARC_generic_ls(h,h₀,g₀,g,direction="Sec";kwargs...)
-
-    return (t, t_original, good_grad, ht,iter,zero,stalled_linesearch)  #pourquoi le true et le 0?
-
+    return (state, stop_ls.meta.optimal)
 end
