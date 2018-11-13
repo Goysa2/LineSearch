@@ -1,0 +1,6 @@
+authors = ["Samuel Goyette <samuel.goyette@usherbrooke.ca>"]
+name = "LineSearch"
+uuid = "2ab8d460-e793-11e8-25d6-0d5e871ea9dc"
+version = "0.0.0"
+
+[deps]

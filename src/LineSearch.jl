@@ -1,5 +1,7 @@
 module LineSearch
 
+using Printf
+
 using State
 using Stopping
 using NLPModels
