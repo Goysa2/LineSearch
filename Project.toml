@@ -1,6 +1,7 @@
-authors = ["Samuel Goyette <samuel.goyette@usherbrooke.ca>"]
 name = "LineSearch"
 uuid = "2ab8d460-e793-11e8-25d6-0d5e871ea9dc"
+authors = ["Samuel Goyette <samuel.goyette@usherbrooke.ca>"]
 version = "0.0.0"
 
 [deps]
+State = "ddcf0d4d-3e56-5c1a-99fc-6bcfdfd69e50"
