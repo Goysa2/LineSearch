@@ -1,7 +1,7 @@
 module LineSearch
 export ls_algorithms, interfaced_ls_algorithms
 
-using Optimize, Polynomials
+# using Optimize, Polynomials
 using LineSearches
 using LSDescentMethods
 

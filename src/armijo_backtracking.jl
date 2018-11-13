@@ -10,8 +10,6 @@ function armijo_ls(h           :: LineModel,
                    verboseLS   :: Bool = false,
                    kwargs...)
     state = stop_ls.current_state
-    nbk = 0
-    nbW = 0
     update!(state, x = 1.0)
 
     stop_ls.optimality_check = (x, y) -> armijo(x,y)
