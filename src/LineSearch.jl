@@ -3,6 +3,8 @@ module LineSearch
 using State
 using Stopping
 using NLPModels
+using Printf
+using LinearAlgebra
 
 include("LSFunctionMetamod.jl")
 include("LineModel2mod.jl")

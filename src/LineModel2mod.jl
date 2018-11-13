@@ -12,7 +12,7 @@ represents the function ϕ : R → R defined by
 
     ϕ(t) := f(x + td).
 """
-type LineModel <: AbstractNLPModel
+mutable struct LineModel <: AbstractNLPModel
   meta :: NLPModelMeta
   counters :: Counters
   nlp :: AbstractNLPModel
