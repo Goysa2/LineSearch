@@ -28,7 +28,7 @@ function LineModel(nlp :: AbstractNLPModel,
                    x   :: Vector{Float64},
                    d   :: Vector{Float64})
   meta = NLPModelMeta(1, x0=zeros(1), name="LineModel to $(nlp.meta.name))")
-  g = Array{Float64}(size(x)[1])
+  g = Vector{Float64}(undef, size(x)[1])
   return LineModel(meta, Counters(), nlp, x, d, g)
 end
 
