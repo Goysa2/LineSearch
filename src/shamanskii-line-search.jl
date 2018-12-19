@@ -14,7 +14,7 @@ Vol. 111, No. 2, pp. 341–358, November 2001
 function shamanskii_line_search(h           :: LineModel,
                                 stop_ls     :: LS_Stopping,
                                 f_meta      :: LS_Function_Meta;
-                                δ           :: Float64 = 0.9999,
+                                δ           :: Float64 = 0.5,
                                 verboseLS   :: Bool = false,
                                 kwargs...)
     state = stop_ls.current_state
