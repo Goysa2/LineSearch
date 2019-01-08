@@ -29,6 +29,10 @@ function shamanskii_line_search(h           :: LineModel,
 
     OK = update_and_start!(stop_ls, ht = h1, gt = slope1, tmps = time())
 
+    if OK
+        printstyled("on ne fait aucune itération de line search \n", color = :red)
+    end
+
     while !OK
         i += 1
         t = state.x
