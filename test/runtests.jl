@@ -16,7 +16,6 @@ h = LineModel(nlp, nlp.meta.x0, -grad(nlp,nlp.meta.x0));
 algorithms_good = [:armijo_ls, :TR_Nwt_ls, :TR_Sec_ls, :TR_SecA_ls, :ARC_Nwt_ls]
 
 for algo in algorithms_good
-   h = LineModel(nlp, nlp.meta.x0, -grad(nlp,nlp.meta.x0));
    println(" ")
    println("$algo")
    lsatx = LSAtT(0.0, h₀ = obj(h, 0.0), g₀ = grad(h, 0.0),
@@ -33,7 +32,6 @@ end
 algorithms_bad = [:ARC_Sec_ls, :ARC_SecA_ls]
 
 for algo in algorithms_bad
-   h = LineModel(nlp, nlp.meta.x0, -grad(nlp,nlp.meta.x0));
    println(" ")
    println("$algo")
    lsatx = LSAtT(0.0, h₀ = obj(h, 0.0), g₀ = grad(h, 0.0),
