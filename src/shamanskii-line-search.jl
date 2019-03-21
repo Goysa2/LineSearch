@@ -10,6 +10,10 @@ By F. LAMPARIELLO and M. SCIANDRONE
 
 JOURNAL OF OPTIMIZATION THEORY AND APPLICATIONS:
 Vol. 111, No. 2, pp. 341–358, November 2001
+
+
+
+DOESN'T WORK YET!
 """
 function shamanskii_line_search(h           :: LineModel,
                                 stop_ls     :: LS_Stopping,
@@ -29,9 +33,9 @@ function shamanskii_line_search(h           :: LineModel,
 
     OK = update_and_start!(stop_ls, ht = h1, gt = slope1, tmps = time())
 
-    if OK
-        printstyled("on ne fait aucune itération de line search \n", color = :red)
-    end
+    # if OK
+    #     printstyled("on ne fait aucune itération de line search \n", color = :red)
+    # end
 
     while !OK
         i += 1
