@@ -4,10 +4,12 @@ else
     using Test
 end
 
-using State, Stopping
+using State
 using NLPModels
 using CUTEst
+using Stopping
 using LineSearch
+
 
 # on performe un p'tit test
 nlp = CUTEstModel("ARWHEAD")
