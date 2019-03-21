@@ -14,6 +14,7 @@ include("pred_ared.jl")
 include("update_H.jl")
 
 include("armijo_backtracking.jl")
+include("one-step-size.jl")
 include("shamanskii-line-search.jl")
 
 include("TR/TR_generic_ls.jl")
