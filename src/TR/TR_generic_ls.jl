@@ -20,15 +20,11 @@ the trust region depending on the previously mentionned treshold.
 
 All the parameters mentionned above can be found in the LS_Function_Meta
 """
-function TR_generic_ls(h           :: LineModel,
-                       stop_ls     :: LS_Stopping,
-                       f_meta      :: LS_Function_Meta;
+function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping,
+                       f_meta :: LS_Function_Meta;
                        φ_dφ        :: Function = (x, y) -> phi_dphi(x, y),
-                       verboseLS   :: Bool = false,
-                       symmetrical :: Bool = false,
+                       verboseLS   :: Bool = false, symmetrical :: Bool = false,
                        kwargs...)
-
-
 
   #state = Array{LS_Stopping.current_state}(0) # Array contenant les states
                                                # des itérations précédentes
@@ -73,7 +69,7 @@ function TR_generic_ls(h           :: LineModel,
   while !OK #admissible: Armijo & Wolfe, tired: iterations
       # We select our descent direction. We compute the classical Newton
       # direction and then we check we the bounds of our trust region
-      dN = -dφt/H
+      dN = -dφt / H
       d = TR_ls_step_computation(H, dφt, dN, f_meta.Δn, f_meta.Δp)
 
       # We see where the direction d gets us
@@ -97,7 +93,7 @@ function TR_generic_ls(h           :: LineModel,
       if ratio < f_meta.eps1  # Unsuccessful approximation => reduce interval
         f_meta.Δp = f_meta.red * f_meta.Δp
         f_meta.Δn = f_meta.red * f_meta.Δn
-        iter+=1
+        iter += 1
         verboseLS && @printf("%4d %9.2e %9.2e  %9.2e %9.2e %9.2e %9.2e %9e %9.2e %9e\n",
                               iter, state.x, φt, dφt, H, f_meta.Δn, f_meta.Δp, 0, dN, ratio);
       else             # Successful approximation => we move towards an

@@ -15,12 +15,9 @@ Vol. 111, No. 2, pp. 341–358, November 2001
 
 DOESN'T WORK YET!
 """
-function shamanskii_line_search(h           :: LineModel,
-                                stop_ls     :: LS_Stopping,
-                                f_meta      :: LS_Function_Meta;
-                                δ           :: Float64 = 0.5,
-                                verboseLS   :: Bool = false,
-                                kwargs...)
+function shamanskii_line_search(h :: LineModel, stop_ls :: LS_Stopping,
+                                f_meta :: LS_Function_Meta; δ :: Float64 = 0.5,
+                                verboseLS = false, kwargs...)
     state = stop_ls.current_state
     i = 0
     update!(state, x = 1.0)
@@ -34,7 +31,7 @@ function shamanskii_line_search(h           :: LineModel,
     OK = update_and_start!(stop_ls, ht = h1, gt = slope1, tmps = time())
 
     # if OK
-    #     printstyled("on ne fait aucune itération de line search \n", color = :red)
+    #     fill
     # end
 
     while !OK

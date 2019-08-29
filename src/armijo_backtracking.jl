@@ -3,12 +3,10 @@ export armijo_ls
 """
 An armijo backtracking algorithm.
 """
-function armijo_ls(h           :: LineModel,
-                   stop_ls     :: LS_Stopping,
+function armijo_ls(h :: LineModel,  stop_ls     :: LS_Stopping,
                    f_meta      :: LS_Function_Meta;
                    φ_dφ        :: Function = (x, y) -> phi_dphi(x, y),
-                   verboseLS   :: Bool = false,
-                   kwargs...)
+                   verboseLS   :: Bool = false,  kwargs...)
     state = stop_ls.current_state
     update!(state, x = 1.0)
 

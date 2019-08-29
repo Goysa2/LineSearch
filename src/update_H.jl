@@ -14,25 +14,19 @@ Inputs:
   - φtprec, previous value of φ(t).
   - dφtprec, previous value of φ'(t).
 """
-function update_H(direction :: String,
-                  h :: LineModel,
-                  t :: Float64,
-                  tprec :: Float64,
-                  φt :: Float64,
-                  dφt :: Float64,
-                  φtprec :: Float64,
-                  dφtprec :: Float64;
-                  kwargs...)
+function update_H(direction :: Symbol, h :: LineModel, t :: Float64,
+                  tprec :: Float64, φt :: Float64, dφt :: Float64,
+                  φtprec :: Float64, dφtprec :: Float64; kwargs...)
 
-  if direction == "Nwt"
+  if direction == :Nwt
     return hess(h, t)
-  elseif direction == "Sec"
+  elseif direction == :Sec
     s = t-tprec
     y = dφt - dφtprec
     seck = y / s
 
     return seck
-   elseif direction == "SecA"
+  elseif direction == :SecA
 
     s = t-tprec
     y = dφt - dφtprec

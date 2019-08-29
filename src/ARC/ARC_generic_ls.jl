@@ -21,12 +21,10 @@ Some parameters are used for TR and ARC methods:
 
 All the parameters mentionned above can be found in the LS_Function_Meta
 """
-function ARC_generic_ls(h         :: LineModel,
-                        stop_ls   :: LS_Stopping,
+function ARC_generic_ls(h         :: LineModel, stop_ls   :: LS_Stopping,
                         f_meta    :: LS_Function_Meta;
                         φ_dφ      :: Function = (x, y) -> phi_dphi(x, y),
-                        verboseLS :: Bool = false,
-                        kwargs...)
+                        verboseLS :: Bool = false, kwargs...)
 
     state = stop_ls.current_state
 

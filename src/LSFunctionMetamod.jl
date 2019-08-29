@@ -19,19 +19,19 @@ mutable struct LS_Function_Meta
     Δp :: Float64  # only for the TR variants
 
     # Direction used (Newton's, Secant or Improved Secant)
-    dir :: String
+    dir :: Symbol
 
     # Additionnal step. If true, this option will make another line search iteration
     # after finding an admissible step size.
     add_step :: Bool ## Pertinent à garder ?? Sam
 
-        function LS_Function_Meta(;eps1 :: Float64 = 0.25,
-                                  eps2  :: Float64 = 0.75,
-                                  aug   :: Float64 = 0.7,
-                                  red   :: Float64 = 0.1,
-                                  Δ     :: Float64 = 10.0,
-                                  dir   :: String = "Nwt",
-                                  add_step :: Bool = false)
+        function LS_Function_Meta(;eps1     :: Float64 = 0.25,
+                                  eps2      :: Float64 = 0.75,
+                                  aug       :: Float64 = 0.7,
+                                  red       :: Float64 = 0.1,
+                                  Δ         :: Float64 = 10.0,
+                                  dir       :: Symbol  = :Nwt,
+                                  add_step  :: Bool    = false)
 
             Δp = Δ
             Δn = max(0.0, -Δ)

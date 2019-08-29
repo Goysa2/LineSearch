@@ -9,11 +9,8 @@ Newton direction cannot be used. Inputs:
   - Δn, lower bound of the trust region.
   - Δp, upper bound of the trust region.
 """
-function TR_ls_step_computation(h :: Float64,
-                                g :: Float64,
-                                dN :: Float64,
-                                Δn :: Float64,
-                                Δp ::Float64)
+function TR_ls_step_computation(h :: Float64, g :: Float64, dN :: Float64,
+                                Δn :: Float64, Δp ::Float64)
 
   if h > 0.0
     if g > 0.0
@@ -30,5 +27,4 @@ function TR_ls_step_computation(h :: Float64,
   end
 
   return d
-
 end

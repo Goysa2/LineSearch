@@ -11,11 +11,10 @@ using Stopping
 using LineSearch
 
 
-# on performe un p'tit test
 nlp = CUTEstModel("ARWHEAD")
 h = LineModel(nlp, nlp.meta.x0, -grad(nlp,nlp.meta.x0));
 # algorithms which reach a solution on that problem
-algorithms_good = [:armijo_ls, :TR_Nwt_ls, :TR_Sec_ls, :TR_SecA_ls, :ARC_Nwt_ls]
+algorithms_good = [:armijo_ls]#, :TR_Nwt_ls, :TR_Sec_ls, :TR_SecA_ls, :ARC_Nwt_ls]
 
 for algo in algorithms_good
    println(" ")
