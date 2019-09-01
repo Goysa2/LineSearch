@@ -5,8 +5,10 @@ using Printf
 using State
 using Stopping
 using NLPModels
+using NLPModelsJuMP
 using Printf
 using LinearAlgebra
+using OptimizationProblems
 
 include("LSFunctionMetamod.jl")
 include("LineModel2mod.jl")

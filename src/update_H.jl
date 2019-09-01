@@ -21,18 +21,18 @@ function update_H(direction :: Symbol, h :: LineModel, t :: Float64,
   if direction == :Nwt
     return hess(h, t)
   elseif direction == :Sec
-    s = t-tprec
-    y = dφt - dφtprec
+    s    = t-tprec
+    y    = dφt - dφtprec
     seck = y / s
 
     return seck
   elseif direction == :SecA
 
-    s = t-tprec
+    s = t   - tprec
     y = dφt - dφtprec
 
     Γ= 3 * (dφt + dφtprec) * s - 6 * (φt - φtprec)
-    if (y * s + Γ) < eps(Float64) * s^2
+    if (y * s + Γ) < eps(Float64) * s ^ 2
       yt = y
     else
       yt =  y + Γ / s

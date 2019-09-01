@@ -1,6 +1,4 @@
-export FunctionMeta, LS_Function_Meta
-
-abstract type FunctionMeta end
+export LS_Function_Meta
 
 mutable struct LS_Function_Meta
 

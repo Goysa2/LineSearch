@@ -20,14 +20,12 @@ the trust region depending on the previously mentionned treshold.
 
 All the parameters mentionned above can be found in the LS_Function_Meta
 """
-function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping,
-                       f_meta :: LS_Function_Meta;
+function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping;
+                       f_meta = LS_Function_Meta(),
                        φ_dφ        :: Function = (x, y) -> phi_dphi(x, y),
                        verboseLS   :: Bool = false, symmetrical :: Bool = false,
                        kwargs...)
 
-  #state = Array{LS_Stopping.current_state}(0) # Array contenant les states
-                                               # des itérations précédentes
   state = stop_ls.current_state
 
   tmp = obj(h, 1.0); tmpg = grad(h, 1.0)
@@ -48,9 +46,9 @@ function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping,
     tprec = NaN; φtestTR = NaN; dφtestTR = NaN; φtprec = NaN; dφtprec = NaN;
 
     # H will denote the approximation to φ'' hereafter
-    if f_meta.dir == "Nwt"
+    if f_meta.dir == :Nwt
       H = hess(h, state.x)
-    elseif f_meta.dir == "Sec" || f_meta.dir == "SecA"
+    elseif f_meta.dir == :Sec || f_meta.dir == :SecA
       H = 1.0
     end
   #end # if OK == false
@@ -79,11 +77,11 @@ function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping,
 
       # depending on the approximation of the second derivate we need different
       # information
-      if f_meta.dir == "Sec" || f_meta.dir == "SecA"
+      if f_meta.dir == :Sec || f_meta.dir == :SecA
         tprec = state.x
         dφtprec = dφt
       end
-      if f_meta.dir == "SecA" φtprec = φt end
+      if f_meta.dir == :SecA φtprec = φt end
 
       # We compute the predicted and actual reduction as well as the ratio
       # between the two.
