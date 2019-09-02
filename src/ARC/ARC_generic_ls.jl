@@ -64,7 +64,7 @@ function ARC_generic_ls(h         :: LineModel, stop_ls   :: LS_Stopping;
         # We see where the direction d gets us
         candidate_state = copy(state)
         update!(candidate_state, x = state.x + d)
-        φtestTR, dφtestTR = φ_dφ(h, candidate_state)
+        φtestTR, dφtestTR = φ_dφ(h, candidate_state; kwargs...)
 
         # depending on the approximation of the second derivate we need different
         # information

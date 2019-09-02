@@ -33,5 +33,14 @@ include("ARC/ARC-Sec-LS.jl")
 include("ARC/ARC-SecA-LS.jl")
 include("ARC/ARC_direction_computation.jl")
 
+include("Bisection/find_interval.jl")
+include("Bisection/Biss-Nwt.jl")
+include("Bisection/Biss-Sec.jl")
+include("Bisection/Biss-SecA.jl")
+include("Bisection/Biss-Cub.jl")
+
+include("other-ls/struct-ls.jl")
+include("other-ls/hagerzhang2.jl")
+include("other-ls/hagerzhang.jl")
 
 end # module

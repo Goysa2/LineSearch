@@ -1,5 +1,5 @@
-export Biss_Nwt_ls
-function Biss_Nwt_ls(h :: LineModel, stop_ls :: LS_Stopping;
+export Biss_SecA_ls
+function Biss_SecA_ls(h :: LineModel, stop_ls :: LS_Stopping;
                      f_meta = LS_Function_Meta(),
                      h₀ = obj(h, 0.0), g₀ = grad(h, 0.0),
                      φ_dφ :: Function = (x, y) -> phi_dphi(x, y),
@@ -9,6 +9,9 @@ function Biss_Nwt_ls(h :: LineModel, stop_ls :: LS_Stopping;
   state = stop_ls.current_state
 
   t = 1.0
+  update!(state, x = t)
+  φt, dφt = φ_dφ(h, state; kwargs...)
+  tqnp = 0.0; dφtqnp = h₀ * (1.0 + 0.01)
   ht = obj(h, t); gt = grad(h, t)
   OK = update_and_start!(stop_ls, ht = ht, gt = gt, h0 = h₀, g0 = g₀)
 
@@ -20,9 +23,6 @@ function Biss_Nwt_ls(h :: LineModel, stop_ls :: LS_Stopping;
   t = ta
   tp = tb
   tqnp = tb
-  iter = 0
-
-  ddφ(t) = hess(h, t)
 
   iter = 0
 
@@ -34,8 +34,14 @@ function Biss_Nwt_ls(h :: LineModel, stop_ls :: LS_Stopping;
 
   while !OK             # admissible: satisfies Armijo & Wolfe,
                         # tired: exceeds maximum number of iterations
-    ddφt = ddφ(t)
-    dN = -dφt / ddφt
+    s = t - tqnp; y = dφt - dφtqnp;
+    Γ = 3.0 * (dφt + dφtqnp) * s - 6.0 * (φt - dφtqnp)
+    if y * s + Γ < eps(Float64) .* (s ^ 2)
+      yt = y + Γ / s
+    else
+      yt = y
+    end
+    dN = -dφt * s / yt
 
     if ((tp - t) * dN > 0.0) && (dN / (tp - t) < γ)
       tplus = t + dN

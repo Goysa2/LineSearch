@@ -30,7 +30,6 @@ function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping;
 
   tmp = obj(h, 1.0); tmpg = grad(h, 1.0)
   # # Check if 1.0 is an admissible step size.
-  # OK = start!(stop_ls)
   OK = update_and_start!(stop_ls, ht = tmp, gt = tmpg, tmps = time())
 
   # If 1.0 isn't an admissible step size we start our line search algorithm
@@ -73,7 +72,7 @@ function TR_generic_ls(h :: LineModel,  stop_ls :: LS_Stopping;
       # We see where the direction d gets us
       candidate_state = copy(state)
       update!(candidate_state, x = state.x + d)
-      φtestTR, dφtestTR = φ_dφ(h, candidate_state)
+      φtestTR, dφtestTR = φ_dφ(h, candidate_state; kwargs...)
 
       # depending on the approximation of the second derivate we need different
       # information
