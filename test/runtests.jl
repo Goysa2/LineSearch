@@ -4,7 +4,6 @@ else
     using Test
 end
 
-using State
 using NLPModels
 using OptimizationProblems
 using Stopping
