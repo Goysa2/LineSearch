@@ -1,5 +1,4 @@
-julia 0.7
-State
+julia
 NLPModels
 Printf
 CUTEst
